@@ -1,6 +1,6 @@
 class Links {
   static const String sourceCode =
-      '';
+      'https://github.com/JonathanZefanya/Aplikasi-Music-Player';
 }
 
 class Assets {

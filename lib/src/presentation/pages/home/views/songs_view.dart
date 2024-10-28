@@ -302,7 +302,10 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               value: orderType.index,
               groupValue: currentOrderType,
               title: Text(
-                orderType.name.capitalize().replaceAll('_', ' '),
+                orderType == OrderType.ASC_OR_SMALLER
+                    ? 'Kebawah / Kecil'
+                    : 'Keatas / Besar',
+                style: TextStyle(fontSize: 16),
               ),
               onChanged: (value) {
                 setState(() {

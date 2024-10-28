@@ -64,7 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: const Icon(Icons.wifi_tethering_outlined),
                   title: const Text('Scan Music'),
                   subtitle: const Text(
-                    'Ignore songs which don\'t satisfy the requirements',
+                    'Filter Musik Mu dan Nikmati',
                   ),
                   onTap: () async {
                     Navigator.of(context).pushNamed(AppRouter.scanRoute);
