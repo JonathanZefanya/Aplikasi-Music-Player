@@ -26,7 +26,7 @@ Music is a local music player app that plays music from your device built with F
 - Settings
 - Themes (multiple themes)
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -38,7 +38,7 @@ Music is a local music player app that plays music from your device built with F
 1. Clone the repo
 
    ```sh
-   git clone
+   git clone https://github.com/JonathanZefanya/Aplikasi-Music-Player
    ```
 
 2. Install dependencies
@@ -53,7 +53,7 @@ Music is a local music player app that plays music from your device built with F
    flutter run
    ```
 
-## ❗ Permissions
+## Permissions
 
 ### Android
 
