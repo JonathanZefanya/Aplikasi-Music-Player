@@ -44,7 +44,7 @@ Music is a local music player app that plays music from your device built with F
 2. Install dependencies
 
    ```sh
-   dart pub get
+   flutter pub get
    ```
 
 3. Run the app
