@@ -58,7 +58,7 @@ class JustAudioPlayer implements MusicPlayer {
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
       // background tidak boleh transparan
-      notificationColor: await _getNotificationColor(), // Warna hitam solid
+      notificationColor: await _getNotificationColor(),
     );
 
     // subscribe to changes in playback state to add to the recently played
@@ -94,7 +94,7 @@ class JustAudioPlayer implements MusicPlayer {
     }
 
     // Jika tidak ada warna album, gunakan warna default dari ikon aplikasi
-    return const Color(0xFF6200EE); // Contoh warna default (ungu)
+    return const Color.fromARGB(255, 0, 65, 14); 
   }
 
 
