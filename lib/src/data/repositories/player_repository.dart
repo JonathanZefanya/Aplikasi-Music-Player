@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
@@ -56,6 +57,8 @@ class JustAudioPlayer implements MusicPlayer {
       androidNotificationChannelName: 'music',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
+      // background tidak boleh transparan
+      notificationColor: await _getNotificationColor(), // Warna hitam solid
     );
 
     // subscribe to changes in playback state to add to the recently played
@@ -78,6 +81,22 @@ class JustAudioPlayer implements MusicPlayer {
       );
     }
   }
+
+  Future<Color> _getNotificationColor() async {
+    try {
+      // Ambil warna album dari MediaItem saat ini
+      final currentMediaItem = _player.sequenceState?.currentSource?.tag as MediaItem?;
+      if (currentMediaItem?.extras?['albumColor'] != null) {
+        return Color(int.parse(currentMediaItem!.extras!['albumColor']));
+      }
+    } catch (e) {
+      print('Error getting album color: $e');
+    }
+
+    // Jika tidak ada warna album, gunakan warna default dari ikon aplikasi
+    return const Color(0xFF6200EE); // Contoh warna default (ungu)
+  }
+
 
   @override
   Future<void> load(
@@ -105,6 +124,9 @@ class JustAudioPlayer implements MusicPlayer {
             artist: song.artist,
             duration: Duration(milliseconds: song.duration!),
             genre: song.genre,
+            extras: {
+              'albumColor': song.album, // Tambahkan warna album (jika ada)
+            },
           ),
         ),
       );
