@@ -85,6 +85,43 @@ class _SettingsPageState extends State<SettingsPage> {
                     Navigator.of(context).pushNamed(AppRouter.themesRoute);
                   },
                 ),
+                // about
+                ListTile(
+                  leading: const Icon(Icons.person_pin_rounded),
+                  title: const Text('About Developer'),
+                  onTap: () async {
+                    // show about dialog
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('About Developer'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Name: Jonathan Zefanya',
+                            ),
+                            Text(
+                              'GitHub: @jonathanzefanya',
+                            ),
+                            Text(
+                              'Email: jonathan.zefanya16@gmail.com',
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
                 // package info
                 _buildPackageInfoTile(context),
               ],
