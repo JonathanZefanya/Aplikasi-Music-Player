@@ -11,16 +11,16 @@ dependencies:
   flutter:
     sdk: flutter # flutter sdk
   flutter_bloc: ^8.1.6 # state management
-  flutter_cache_manager: ^3.4.1
+  flutter_cache_manager: ^3.4.1 # cache manager
   flutter_staggered_animations: ^1.1.1 # animation
-  fluttertoast: ^8.2.8
+  fluttertoast: ^9.0.0
   get_it: ^8.0.0 # dependency injection
   hive: ^2.2.3 # local database
   hive_flutter: ^1.1.0 # local database
   just_audio: ^0.9.41 # audio player
   just_audio_background: ^0.0.1-beta.11 # audio player background
-  lottie: ^3.1.2
-  marquee: ^2.2.3
+  lottie: ^3.1.2 # lottie animation
+  marquee: ^2.2.3 # marquee text
   on_audio_query: ^2.9.0 # get songs from device
   package_info_plus: ^8.0.2 # get app info
   permission_handler: ^11.3.1 # get permission

@@ -31,8 +31,9 @@ Music is a local music player app that plays music from your device built with F
 
 ### Prerequisites
 
-- Flutter
+- Flutter ersion 3.41.5
 - Visual Studio Code / Android Studio 
+- Emulator Android 14
 
 ### Setup
 
