@@ -71,9 +71,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Ink _buildBody(BuildContext context) {
     return Ink(
-      decoration: BoxDecoration(
-        gradient: Themes.getTheme().linearGradient,
-      ),
+      decoration: Themes.getBackgroundDecoration(),
       child: _hasPermission
           ? Column(
               children: [

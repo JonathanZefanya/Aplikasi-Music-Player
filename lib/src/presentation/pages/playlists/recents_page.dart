@@ -40,9 +40,7 @@ class _RecentsPageState extends State<RecentsPage> {
       body: Ink(
         height: double.infinity,
         width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: Themes.getTheme().linearGradient,
-        ),
+        decoration: Themes.getBackgroundDecoration(),
         child: StreamBuilder<SequenceState?>(
           stream: player.sequenceState,
           builder: (context, snapshot) {

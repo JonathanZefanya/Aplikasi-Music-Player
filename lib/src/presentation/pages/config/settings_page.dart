@@ -54,9 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
               0,
               16,
             ),
-            decoration: BoxDecoration(
-              gradient: Themes.getTheme().linearGradient,
-            ),
+            decoration: Themes.getBackgroundDecoration(),
             child: ListView(
               children: [
                 // scan music (ignores songs which don't satisfy the requirements)

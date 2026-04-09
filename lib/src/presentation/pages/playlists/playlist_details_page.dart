@@ -36,9 +36,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         backgroundColor: Themes.getTheme().primaryColor,
       ),
       body: Ink(
-        decoration: BoxDecoration(
-          gradient: Themes.getTheme().linearGradient,
-        ),
+        decoration: Themes.getBackgroundDecoration(),
         child: BlocListener<PlaylistsCubit, PlaylistsState>(
           listener: (context, state) {
             if (state is PlaylistsSongsLoaded) {
@@ -110,9 +108,7 @@ class _AddSongToPlaylistState extends State<AddSongToPlaylist> {
         backgroundColor: Themes.getTheme().primaryColor,
       ),
       body: Ink(
-        decoration: BoxDecoration(
-          gradient: Themes.getTheme().linearGradient,
-        ),
+        decoration: Themes.getBackgroundDecoration(),
         child: BlocListener<HomeBloc, HomeState>(
           listener: (context, state) {
             if (state is SongsLoaded) {

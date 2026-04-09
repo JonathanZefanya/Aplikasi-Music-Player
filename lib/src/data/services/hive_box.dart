@@ -2,6 +2,10 @@ class HiveBox {
   static const String boxName = 'myBox';
 
   static const String themeKey = 'theme';
+  static const String customThemePrimaryColorKey = 'customThemePrimaryColor';
+  static const String customThemeSecondaryColorKey =
+      'customThemeSecondaryColor';
+  static const String customThemeImagePathKey = 'customThemeImagePath';
 
   static const String favoriteSongsKey = 'favoriteSongs';
 

@@ -42,9 +42,7 @@ class _ScanPageState extends State<ScanPage> {
         ),
       ),
       body: Ink(
-        decoration: BoxDecoration(
-          gradient: Themes.getTheme().linearGradient,
-        ),
+        decoration: Themes.getBackgroundDecoration(),
         child: ListView(
           children: [
             // scanning animation

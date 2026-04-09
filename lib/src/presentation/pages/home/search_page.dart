@@ -47,9 +47,7 @@ class _SearchPageState extends State<SearchPage> {
         ],
       ),
       body: Ink(
-        decoration: BoxDecoration(
-          gradient: Themes.getTheme().linearGradient,
-        ),
+        decoration: Themes.getBackgroundDecoration(),
         child: BlocBuilder<SearchBloc, SearchState>(
           builder: (context, state) {
             if (searchController.text.isEmpty) {

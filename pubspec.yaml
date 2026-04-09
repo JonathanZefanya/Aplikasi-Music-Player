@@ -1,7 +1,7 @@
 name: music
 description: "music is a local music player app that plays music from your device built with Flutter."
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
-version: 1.0.0+1
+version: 1.0.1+1
 
 environment:
   sdk: ">=3.5.3 <4.0.0"
@@ -17,12 +17,14 @@ dependencies:
   get_it: ^8.0.0 # dependency injection
   hive: ^2.2.3 # local database
   hive_flutter: ^1.1.0 # local database
+  image_picker: ^1.2.0 # pick custom theme image
   just_audio: ^0.9.41 # audio player
   just_audio_background: ^0.0.1-beta.11 # audio player background
   lottie: ^3.1.2 # lottie animation
   marquee: ^2.2.3 # marquee text
   on_audio_query: ^2.9.0 # get songs from device
   package_info_plus: ^8.0.2 # get app info
+  path_provider: ^2.1.5 # app storage path
   permission_handler: ^11.3.1 # get permission
   rxdart: ^0.28.0 # stream
   share_plus: ^10.0.2 # share song

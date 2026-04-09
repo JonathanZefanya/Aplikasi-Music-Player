@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:music/src/data/services/hive_box.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Themes {
+  static const String customColorThemeName = 'Custom Color';
+  static const String customImageThemeName = 'Custom Image';
+
   static final List<ThemeColor> _themes = [
     PurpleTheme(),
     BlueTheme(),
@@ -27,9 +33,11 @@ class Themes {
     'Black',
     'White',
     'Gray',
+    customColorThemeName,
+    customImageThemeName,
   ];
 
-  static get themes => _themes;
+  static List<ThemeColor> get themes => _themes;
   static List<String> get themeNames => _themeNames;
 
   static ThemeColor getThemeFromKey(String key) {
@@ -54,6 +62,10 @@ class Themes {
         return _themes[8];
       case 'Gray':
         return _themes[9];
+      case customColorThemeName:
+        return _getCustomColorTheme();
+      case customImageThemeName:
+        return _getCustomImageTheme();
       default:
         return _themes[0];
     }
@@ -62,6 +74,39 @@ class Themes {
   static Future<void> setTheme(String themeName) async {
     final Box<dynamic> box = Hive.box(HiveBox.boxName);
     await box.put(HiveBox.themeKey, themeName);
+  }
+
+  static Future<void> setCustomColorTheme(Color primaryColor) async {
+    final Color secondaryColor = _shiftLightness(primaryColor, 0.18);
+    final Box<dynamic> box = Hive.box(HiveBox.boxName);
+    final String? previousImagePath =
+        box.get(HiveBox.customThemeImagePathKey) as String?;
+
+    await box.put(HiveBox.customThemePrimaryColorKey, primaryColor.value);
+    await box.put(HiveBox.customThemeSecondaryColorKey, secondaryColor.value);
+    await box.put(HiveBox.customThemeImagePathKey, null);
+    await box.put(HiveBox.themeKey, customColorThemeName);
+    await _deleteFileIfExists(previousImagePath);
+  }
+
+  static Future<void> setCustomImageTheme({
+    required String imagePath,
+    required Color overlayColor,
+  }) async {
+    final Box<dynamic> box = Hive.box(HiveBox.boxName);
+    final String? previousImagePath =
+        box.get(HiveBox.customThemeImagePathKey) as String?;
+    final String storedImagePath = await _storeCustomThemeImage(imagePath);
+    final Color secondaryColor = _shiftLightness(
+      overlayColor,
+      estimateBrightness(overlayColor) == Brightness.dark ? 0.12 : -0.12,
+    );
+
+    await box.put(HiveBox.customThemePrimaryColorKey, overlayColor.value);
+    await box.put(HiveBox.customThemeSecondaryColorKey, secondaryColor.value);
+    await box.put(HiveBox.customThemeImagePathKey, storedImagePath);
+    await box.put(HiveBox.themeKey, customImageThemeName);
+    await _deleteFileIfExists(previousImagePath);
   }
 
   static String getThemeName() {
@@ -75,6 +120,137 @@ class Themes {
     final String? themeName = box.get(HiveBox.themeKey) as String?;
     return getThemeFromKey(themeName ?? 'Purple');
   }
+
+  static BoxDecoration getBackgroundDecoration() {
+    final ThemeColor theme = getTheme();
+    final String? imagePath = theme.backgroundImagePath;
+
+    if (imagePath != null &&
+        imagePath.isNotEmpty &&
+        File(imagePath).existsSync()) {
+      return BoxDecoration(
+        color: theme.primaryColor,
+        image: DecorationImage(
+          image: FileImage(File(imagePath)),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            theme.overlayColor.withOpacity(0.55),
+            BlendMode.darken,
+          ),
+        ),
+      );
+    }
+
+    return BoxDecoration(gradient: theme.linearGradient);
+  }
+
+  static Color getAdaptiveTextColor(Color color) {
+    return estimateBrightness(color) == Brightness.dark
+        ? Colors.white
+        : Colors.black;
+  }
+
+  static Brightness estimateBrightness(Color color) {
+    return ThemeData.estimateBrightnessForColor(color);
+  }
+
+  static ThemeColor _getCustomColorTheme() {
+    final Box<dynamic> box = Hive.box(HiveBox.boxName);
+    final int primaryValue = box.get(
+      HiveBox.customThemePrimaryColorKey,
+      defaultValue: const Color(0xff5c03bc).value,
+    ) as int;
+
+    final int secondaryValue = box.get(
+      HiveBox.customThemeSecondaryColorKey,
+      defaultValue: const Color(0xff8b3ff0).value,
+    ) as int;
+
+    return CustomColorTheme(
+      primaryColor: Color(primaryValue),
+      secondaryColor: Color(secondaryValue),
+    );
+  }
+
+  static ThemeColor _getCustomImageTheme() {
+    final Box<dynamic> box = Hive.box(HiveBox.boxName);
+    final int primaryValue = box.get(
+      HiveBox.customThemePrimaryColorKey,
+      defaultValue: const Color(0xff111111).value,
+    ) as int;
+
+    final int secondaryValue = box.get(
+      HiveBox.customThemeSecondaryColorKey,
+      defaultValue: const Color(0xff2d2d2d).value,
+    ) as int;
+
+    final String? imagePath =
+        box.get(HiveBox.customThemeImagePathKey) as String?;
+
+    return CustomImageTheme(
+      overlayColor: Color(primaryValue),
+      secondaryColor: Color(secondaryValue),
+      imagePath: imagePath,
+    );
+  }
+
+  static Color _shiftLightness(Color color, double delta) {
+    final HSLColor hsl = HSLColor.fromColor(color);
+    final double nextLightness = (hsl.lightness + delta).clamp(0.0, 1.0);
+    return hsl.withLightness(nextLightness).toColor();
+  }
+
+  static Future<String> _storeCustomThemeImage(String sourcePath) async {
+    final File sourceFile = File(sourcePath);
+    if (!sourceFile.existsSync()) {
+      throw StateError('Custom theme image does not exist: $sourcePath');
+    }
+
+    final Directory applicationDirectory =
+        await getApplicationDocumentsDirectory();
+    final Directory themeDirectory = Directory(
+      '${applicationDirectory.path}${Platform.pathSeparator}custom_theme_images',
+    );
+
+    if (!themeDirectory.existsSync()) {
+      await themeDirectory.create(recursive: true);
+    }
+
+    final String fileName = _buildCustomThemeImageFileName(sourcePath);
+    final File storedFile = await sourceFile.copy(
+      '${themeDirectory.path}${Platform.pathSeparator}$fileName',
+    );
+
+    return storedFile.path;
+  }
+
+  static String _buildCustomThemeImageFileName(String sourcePath) {
+    final String normalizedPath = sourcePath.replaceAll('\\', '/');
+    final String originalName = normalizedPath.split('/').last;
+    final String extensionMatch = RegExp(r'(\.[^./\\]+)$')
+            .firstMatch(originalName)
+            ?.group(0) ??
+        '.png';
+
+    return 'theme_${DateTime.now().microsecondsSinceEpoch}$extensionMatch';
+  }
+
+  static Future<void> _deleteFileIfExists(String? filePath) async {
+    if (filePath == null || filePath.isEmpty) {
+      return;
+    }
+
+    final File file = File(filePath);
+    if (!file.existsSync()) {
+      return;
+    }
+
+    try {
+      await file.delete();
+    } catch (_) {
+      // Ignore cleanup failures so theme changes still succeed.
+    }
+  }
 }
 
 abstract class ThemeColor {
@@ -83,6 +259,8 @@ abstract class ThemeColor {
   final Color secondaryColor;
   final ColorScheme colorScheme;
   final LinearGradient linearGradient;
+  final String? backgroundImagePath;
+  final Color overlayColor;
 
   const ThemeColor({
     required this.themeName,
@@ -90,7 +268,58 @@ abstract class ThemeColor {
     required this.secondaryColor,
     required this.colorScheme,
     required this.linearGradient,
+    this.backgroundImagePath,
+    this.overlayColor = Colors.transparent,
   });
+
+  Color get adaptiveTextColor => Themes.getAdaptiveTextColor(primaryColor);
+}
+
+class CustomColorTheme extends ThemeColor {
+  CustomColorTheme({required Color primaryColor, required Color secondaryColor})
+      : super(
+          themeName: Themes.customColorThemeName,
+          primaryColor: primaryColor,
+          secondaryColor: secondaryColor,
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.deepPurple,
+            brightness: Themes.estimateBrightness(primaryColor),
+          ),
+          linearGradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              primaryColor,
+              secondaryColor,
+            ],
+          ),
+        );
+}
+
+class CustomImageTheme extends ThemeColor {
+  CustomImageTheme({
+    required Color overlayColor,
+    required Color secondaryColor,
+    required String? imagePath,
+  }) : super(
+          themeName: Themes.customImageThemeName,
+          primaryColor: overlayColor,
+          secondaryColor: secondaryColor,
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.blueGrey,
+            brightness: Themes.estimateBrightness(overlayColor),
+          ),
+          linearGradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              overlayColor,
+              secondaryColor,
+            ],
+          ),
+          backgroundImagePath: imagePath,
+          overlayColor: overlayColor,
+        );
 }
 
 class PurpleTheme extends ThemeColor {

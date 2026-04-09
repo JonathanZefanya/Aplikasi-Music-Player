@@ -53,9 +53,7 @@ class _GenrePageState extends State<GenrePage> {
         ),
       ),
       body: Ink(
-        decoration: BoxDecoration(
-          gradient: Themes.getTheme().linearGradient,
-        ),
+        decoration: Themes.getBackgroundDecoration(),
         child: Column(
           children: [
             Expanded(
