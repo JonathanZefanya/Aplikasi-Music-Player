@@ -10,9 +10,11 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/bloc/player/player_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/helpers/helpers.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/services/hive_box.dart';
+import 'package:music/src/presentation/widgets/alphabet_index_bar_flex.dart';
 import 'package:music/src/presentation/widgets/song_list_tile.dart';
 
 class SongsView extends StatefulWidget {
@@ -31,6 +33,7 @@ class _SongsViewState extends State<SongsView>
   final songs = <SongModel>[];
   bool isLoading = true;
   final _scrollController = ScrollController();
+  List<GlobalKey> _songItemKeys = [];
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _SongsViewState extends State<SongsView>
           setState(() {
             songs.clear();
             songs.addAll(state.songs);
+            _songItemKeys = List.generate(songs.length, (_) => GlobalKey());
             isLoading = false;
           });
 
@@ -64,156 +68,187 @@ class _SongsViewState extends State<SongsView>
               onRefresh: () async {
                 context.read<HomeBloc>().add(GetSongsEvent());
               },
-              child: CustomScrollView(
-                controller: _scrollController,
-                slivers: [
-                  SliverToBoxAdapter(
+              child: Stack(
+                children: [
+                  Positioned.fill(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // number of songs
-                          Text(
-                            '${songs.length} songs',
-                            style: Theme.of(context).textTheme.titleMedium,
+                      padding: const EdgeInsets.only(right: 40),
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // number of songs
+                                  Text(
+                                    '${songs.length} songs',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  // sort button
+                                  IconButton(
+                                    onPressed: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        builder: (context) => const SortBottomSheet(),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.sort),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          // sort button
-                          IconButton(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (context) => const SortBottomSheet(),
-                              );
-                            },
-                            icon: const Icon(Icons.sort),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(32),
+                                      ),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(32),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(Icons.shuffle),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Shuffle',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium,
+                                            ),
+                                          ],
+                                        ),
+                                        onTap: () {
+                                          // enable shuffle
+                                          context.read<PlayerBloc>().add(
+                                                PlayerSetShuffleModeEnabled(true),
+                                              );
+
+                                          // get random song
+                                          final randomSong =
+                                              songs[Random().nextInt(songs.length)];
+
+                                          // play random song
+                                          context.read<PlayerBloc>().add(
+                                                PlayerLoadSongs(
+                                                  songs,
+                                                  sl<MusicPlayer>()
+                                                      .getMediaItemFromSong(randomSong),
+                                                ),
+                                              );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Container(
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(32),
+                                      ),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(32),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(Icons.play_arrow),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Play',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium,
+                                            ),
+                                          ],
+                                        ),
+                                        onTap: () {
+                                          // disable shuffle
+                                          context.read<PlayerBloc>().add(
+                                                PlayerSetShuffleModeEnabled(false),
+                                              );
+
+                                          // play first song
+                                          context.read<PlayerBloc>().add(
+                                                PlayerLoadSongs(
+                                                  songs,
+                                                  sl<MusicPlayer>()
+                                                      .getMediaItemFromSong(songs[0]),
+                                                ),
+                                              );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 16),
+                          ),
+                          AnimationLimiter(
+                            child: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final song = songs[index];
+                                  return AnimationConfiguration.staggeredList(
+                                    position: index,
+                                    duration: const Duration(milliseconds: 500),
+                                    child: FlipAnimation(
+                                      child: SongListTile(
+                                        key: _songItemKeys[index],
+                                        song: song,
+                                        songs: songs,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                childCount: songs.length,
+                              ),
+                            ),
+                          ),
+                          // bottom padding
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 100),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(32),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.shuffle),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Shuffle',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ],
-                                ),
-                                onTap: () {
-                                  // enable shuffle
-                                  context.read<PlayerBloc>().add(
-                                        PlayerSetShuffleModeEnabled(true),
-                                      );
-
-                                  // get random song
-                                  final randomSong =
-                                      songs[Random().nextInt(songs.length)];
-
-                                  // play random song
-                                  context.read<PlayerBloc>().add(
-                                        PlayerLoadSongs(
-                                          songs,
-                                          sl<MusicPlayer>()
-                                              .getMediaItemFromSong(randomSong),
-                                        ),
-                                      );
-                                },
-                              ),
+                  if (_songShortcutLetters.isNotEmpty)
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: 6,
+                            bottom: MediaQuery.of(context).padding.bottom,
+                          ),
+                          child: SizedBox(
+                            width: 34,
+                            child: AlphabetIndexBar(
+                              letters: _songShortcutLetters,
+                              separatorBeforeLastCount: 3,
+                              fillHeight: true,
+                              onLetterTap: _scrollToSongLetter,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(32),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.play_arrow),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Play',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ],
-                                ),
-                                onTap: () {
-                                  // disable shuffle
-                                  context.read<PlayerBloc>().add(
-                                        PlayerSetShuffleModeEnabled(false),
-                                      );
-
-                                  // play first song
-                                  context.read<PlayerBloc>().add(
-                                        PlayerLoadSongs(
-                                          songs,
-                                          sl<MusicPlayer>()
-                                              .getMediaItemFromSong(songs[0]),
-                                        ),
-                                      );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 16),
-                  ),
-                  AnimationLimiter(
-                    child: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final song = songs[index];
-                          return AnimationConfiguration.staggeredList(
-                            position: index,
-                            duration: const Duration(milliseconds: 500),
-                            child: FlipAnimation(
-                              child: SongListTile(
-                                song: song,
-                                songs: songs,
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: songs.length,
-                      ),
-                    ),
-                  ),
-                  // bottom padding
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 100),
-                  ),
                 ],
               ),
             ),
@@ -227,6 +262,46 @@ class _SongsViewState extends State<SongsView>
           const Duration(milliseconds: 500), // Duration of the scroll animation
       curve: Curves.easeInOut, // Animation curve
     );
+  }
+
+  List<String> get _songShortcutLetters {
+    final labels = <String>{};
+    for (final song in songs) {
+      final String? label = extractAsciiShortcutLabel(song.title);
+      if (label != null) {
+        labels.add(label);
+      }
+    }
+
+    return sortAsciiShortcutLabels(labels);
+  }
+
+  Future<void> _scrollToSongLetter(String label) async {
+    final int targetIndex = songs.indexWhere(
+      (song) => extractAsciiShortcutLabel(song.title) == label,
+    );
+
+    if (targetIndex == -1 || !_scrollController.hasClients) {
+      return;
+    }
+
+    final double estimatedOffset = 170.0 + (targetIndex * 88.0);
+    await _scrollController.animateTo(
+      estimatedOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+
+    final GlobalKey itemKey = _songItemKeys[targetIndex];
+    final BuildContext? itemContext = itemKey.currentContext;
+    if (itemContext != null) {
+      await Scrollable.ensureVisible(
+        itemContext,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
+        alignment: 0.08,
+      );
+    }
   }
 }
 
