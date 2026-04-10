@@ -47,6 +47,8 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (details) => _selectLetter(details.localPosition.dy, selectionHeight),
+          onTapUp: (_) => _clearActiveLetter(),
+          onTapCancel: _clearActiveLetter,
           onPanDown: (details) => _selectLetter(details.localPosition.dy, selectionHeight),
           onPanStart: (details) => _selectLetter(details.localPosition.dy, selectionHeight),
           onPanUpdate: (details) => _selectLetter(details.localPosition.dy, selectionHeight),
@@ -272,22 +274,82 @@ class _AlphabetIndexLetter extends StatelessWidget {
     final Color textColor = Theme.of(context).colorScheme.onSurface;
     final Color activeColor = Theme.of(context).colorScheme.primary;
 
-    return AnimatedContainer(
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        if (isActive)
+          Positioned(
+            right: 30,
+            child: _AlphabetIndexBubble(
+              letter: letter,
+              activeColor: activeColor,
+            ),
+          ),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isActive ? activeColor.withOpacity(0.22) : surfaceColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            letter,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: isActive ? activeColor : textColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AlphabetIndexBubble extends StatelessWidget {
+  final String letter;
+  final Color activeColor;
+
+  const _AlphabetIndexBubble({
+    required this.letter,
+    required this.activeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bubbleBackground = Theme.of(context).colorScheme.surface;
+
+    return AnimatedScale(
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isActive ? activeColor.withOpacity(0.22) : surfaceColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        letter,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: isActive ? activeColor : textColor,
+      scale: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: bubbleBackground,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: activeColor.withOpacity(0.22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Text(
+          letter,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: activeColor,
+          ),
         ),
       ),
     );
