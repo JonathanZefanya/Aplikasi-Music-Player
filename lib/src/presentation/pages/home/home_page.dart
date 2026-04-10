@@ -177,14 +177,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               );
             },
           ),
-          // themes
-          ListTile(
-            leading: const Icon(Icons.color_lens_outlined),
-            title: const Text('Themes'),
-            onTap: () {
-              Navigator.of(context).pushNamed(AppRouter.themesRoute);
-            },
-          ),
           // settings
           ListTile(
             leading: const Icon(Icons.settings),
