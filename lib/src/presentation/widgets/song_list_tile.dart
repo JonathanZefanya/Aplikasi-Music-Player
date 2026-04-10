@@ -160,11 +160,17 @@ class _SongListTileState extends State<SongListTile> {
 
   IconButton _buildTrailing(BuildContext context) {
     return IconButton(
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+      alignment: Alignment.centerRight,
       onPressed: () {
         // add to queue, add to playlist, delete, share
         _buildModalBottomSheet(context);
       },
-      icon: const Icon(Icons.more_vert_outlined),
+      icon: Transform.translate(
+        offset: const Offset(13, 0),
+        child: const Icon(Icons.more_vert_outlined),
+      ),
       tooltip: 'More',
     );
   }
