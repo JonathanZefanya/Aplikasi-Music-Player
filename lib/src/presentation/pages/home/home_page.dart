@@ -184,7 +184,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onTap: () {
               Navigator.of(context).pushNamed(AppRouter.settingsRoute);
             },
-          )
+          ),
         ],
       ),
     );

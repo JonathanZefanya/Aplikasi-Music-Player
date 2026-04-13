@@ -14,7 +14,7 @@ import 'package:music/src/core/helpers/helpers.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/services/hive_box.dart';
-import 'package:music/src/presentation/widgets/alphabet_index_bar_flex.dart';
+import 'package:music/src/presentation/widgets/alphabet_index_bar.dart';
 import 'package:music/src/presentation/widgets/song_list_tile.dart';
 
 class SongsView extends StatefulWidget {
@@ -243,7 +243,7 @@ class _SongsViewState extends State<SongsView>
                               letters: _songShortcutLetters,
                               separatorBeforeLastCount: 3,
                               fillHeight: true,
-                              onLetterTap: _scrollToSongLetter,
+                              onSelected: _scrollToSongLetter,
                             ),
                           ),
                         ),

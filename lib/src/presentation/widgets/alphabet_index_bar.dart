@@ -3,31 +3,78 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class AlphabetIndexBar extends StatefulWidget {
-  final List<String> letters;
-  final ValueChanged<String> onLetterTap;
-  final int? separatorBeforeLastCount;
-  final double separatorGapHeight;
-  final bool fillHeight;
-
   const AlphabetIndexBar({
     super.key,
     required this.letters,
-    required this.onLetterTap,
+    required this.onSelected,
+    this.initialLetter,
+    this.activeColor,
+    this.inactiveColor,
     this.separatorBeforeLastCount,
-    this.separatorGapHeight = 8,
     this.fillHeight = false,
+    this.itemGap = 4,
+    this.separatorGap = 8,
+    this.width = 28,
+    this.horizontalPadding = 4,
+    this.verticalPadding = 8,
+    this.textStyle,
   });
+
+  final List<String> letters;
+  final ValueChanged<String> onSelected;
+  final String? initialLetter;
+  final Color? activeColor;
+  final Color? inactiveColor;
+  final int? separatorBeforeLastCount;
+  final bool fillHeight;
+  final double itemGap;
+  final double separatorGap;
+  final double width;
+  final double horizontalPadding;
+  final double verticalPadding;
+  final TextStyle? textStyle;
 
   @override
   State<AlphabetIndexBar> createState() => _AlphabetIndexBarState();
 }
 
 class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
+  static const double _minItemExtent = 24;
+
   String? _activeLetter;
 
-  static const double _itemExtent = 24;
-  static const double _itemGap = 4;
-  static const double _verticalPadding = 8;
+  int? get _separatorIndex {
+    final count = widget.separatorBeforeLastCount;
+    if (count == null || count <= 0) {
+      return null;
+    }
+
+    final separatorIndex = widget.letters.length - count;
+    if (separatorIndex <= 0 || separatorIndex >= widget.letters.length) {
+      return null;
+    }
+
+    return separatorIndex;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _activeLetter = widget.initialLetter;
+  }
+
+  @override
+  void didUpdateWidget(covariant AlphabetIndexBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialLetter != oldWidget.initialLetter &&
+        widget.initialLetter != _activeLetter) {
+      _activeLetter = widget.initialLetter;
+    }
+
+    if (_activeLetter != null && !widget.letters.contains(_activeLetter)) {
+      _activeLetter = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,306 +82,248 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
       return const SizedBox.shrink();
     }
 
-    final int? separatorIndex = _separatorIndex;
-    final double contentHeight = _contentHeight(widget.letters.length);
+    final theme = Theme.of(context);
+    final textStyle = widget.textStyle ?? theme.textTheme.labelSmall;
+    final activeColor = widget.activeColor ?? theme.colorScheme.primary;
+    final inactiveColor = widget.inactiveColor ??
+        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.72);
 
-    return LayoutBuilder(
-          builder: (context, constraints) {
-            final bool shouldFillHeight = widget.fillHeight && constraints.hasBoundedHeight;
-            final double barHeight = shouldFillHeight
-                ? constraints.maxHeight
-                : contentHeight;
-            final List<Widget> items = shouldFillHeight
-                ? _buildFilledItems(separatorIndex)
-                : _buildItems(separatorIndex);
+    return SizedBox(
+      width: widget.width,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final hasBoundedHeight = constraints.hasBoundedHeight &&
+              constraints.maxHeight.isFinite &&
+              constraints.maxHeight > 0;
 
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (details) => _selectLetter(details.localPosition.dy),
-          onPanDown: (details) => _selectLetter(details.localPosition.dy),
-          onPanStart: (details) => _selectLetter(details.localPosition.dy),
-          onPanUpdate: (details) => _selectLetter(details.localPosition.dy),
-          onPanEnd: (_) => _clearActiveLetter(),
-          onPanCancel: _clearActiveLetter,
-          child: SizedBox(
-            width: 34,
-            height: barHeight,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(999),
+          final children = widget.fillHeight && hasBoundedHeight
+              ? _buildFilledChildren(
+                  context: context,
+                  textStyle: textStyle,
+                  activeColor: activeColor,
+                  inactiveColor: inactiveColor,
+                  availableHeight: constraints.maxHeight,
+                )
+              : _buildCompactChildren(
+                  context: context,
+                  textStyle: textStyle,
+                  activeColor: activeColor,
+                  inactiveColor: inactiveColor,
+                );
+
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapDown: (details) {
+              final letter = _letterForLocalPosition(
+                context: context,
+                localPosition: details.localPosition,
+                availableHeight: hasBoundedHeight ? constraints.maxHeight : null,
+              );
+              if (letter != null) {
+                _activateLetter(letter);
+              }
+            },
+            onTapUp: (_) => _clearActiveLetter(),
+            onTapCancel: _clearActiveLetter,
+            onVerticalDragDown: (details) {
+              final letter = _letterForLocalPosition(
+                context: context,
+                localPosition: details.localPosition,
+                availableHeight: hasBoundedHeight ? constraints.maxHeight : null,
+              );
+              if (letter != null) {
+                _activateLetter(letter);
+              }
+            },
+            onVerticalDragUpdate: (details) {
+              final letter = _letterForLocalPosition(
+                context: context,
+                localPosition: details.localPosition,
+                availableHeight: hasBoundedHeight ? constraints.maxHeight : null,
+              );
+              if (letter != null) {
+                _activateLetter(letter);
+              }
+            },
+            onVerticalDragEnd: (_) => _clearActiveLetter(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.horizontalPadding,
+                vertical: widget.verticalPadding,
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: _verticalPadding,
-                ),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Column(
-                            mainAxisSize:
-                                shouldFillHeight ? MainAxisSize.max : MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                    children: items,
-                  ),
+              child: Align(
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: widget.fillHeight && hasBoundedHeight
+                      ? MainAxisSize.max
+                      : MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: children,
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  double _contentHeight(int count) {
-    if (count <= 0) {
-      return 0;
-    }
+  List<Widget> _buildCompactChildren({
+    required BuildContext context,
+    required TextStyle? textStyle,
+    required Color activeColor,
+    required Color inactiveColor,
+  }) {
+    final children = <Widget>[];
+    final separatorIndex = _separatorIndex;
 
-    final int? separatorIndex = _separatorIndex;
-
-    return (_verticalPadding * 2) +
-        (count * _itemExtent) +
-        (math.max(0, count - 1) * _itemGap) +
-        (separatorIndex == null ? 0 : widget.separatorGapHeight);
-  }
-
-  void _selectLetter(double localDy) {
-    if (widget.letters.isEmpty) {
-      return;
-    }
-
-    final double contentHeight = _contentHeight(widget.letters.length);
-    final double clampedDy = localDy.clamp(0.0, contentHeight - 0.0001);
-    final int? separatorIndex = _separatorIndex;
-
-    if (widget.fillHeight) {
-          final double separatorHeight = separatorIndex == null ? 0 : widget.separatorGapHeight;
-          final double slotHeight = math.max(
-            1.0,
-            (contentHeight - separatorHeight - (_verticalPadding * 2)) /
-                widget.letters.length,
-          );
-          double currentTop = _verticalPadding;
-        return;
-          for (int index = 0; index < widget.letters.length; index++) {
-            final double itemBottom = currentTop + slotHeight;
-            if (clampedDy < itemBottom) {
-              final String selectedLetter = widget.letters[index];
-              if (_activeLetter != selectedLetter) {
-                setState(() {
-                  _activeLetter = selectedLetter;
-                });
-                widget.onLetterTap(selectedLetter);
-              }
-              return;
-            }
-      }
-            currentTop = itemBottom;
-
-            if (separatorIndex != null && index == separatorIndex) {
-              final double separatorBottom = currentTop + widget.separatorGapHeight;
-              if (clampedDy < separatorBottom) {
-                final int nextIndex = math.min(index + 1, widget.letters.length - 1);
-                final String selectedLetter = widget.letters[nextIndex];
-                if (_activeLetter != selectedLetter) {
-                  setState(() {
-                    _activeLetter = selectedLetter;
-                  });
-                  widget.onLetterTap(selectedLetter);
-                }
-                return;
-              }
-              currentTop = separatorBottom;
-            }
-          }
-      final double slotHeight = contentHeight / entryCount;
-          return;
-        }
-      int slotIndex = (clampedDy / slotHeight).floor();
-        double currentTop = _verticalPadding;
-      if (slotIndex >= entryCount) {
-        for (int index = 0; index < widget.letters.length; index++) {
-          final double itemBottom = currentTop + _itemExtent;
-          if (clampedDy < itemBottom) {
-            final String selectedLetter = widget.letters[index];
-            if (_activeLetter != selectedLetter) {
-              setState(() {
-                _activeLetter = selectedLetter;
-              });
-              widget.onLetterTap(selectedLetter);
-            }
-            return;
-          }
-        slotIndex = entryCount - 1;
-          currentTop = itemBottom;
-      }
-          if (index != widget.letters.length - 1) {
-            final double gapBottom = currentTop + _itemGap;
-            if (clampedDy < gapBottom) {
-              final String selectedLetter = widget.letters[index];
-              if (_activeLetter != selectedLetter) {
-                setState(() {
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final bool fillHeight = widget.fillHeight && constraints.hasBoundedHeight;
-                final double barHeight = fillHeight ? constraints.maxHeight : contentHeight;
-                final double selectionHeight = fillHeight ? barHeight : contentHeight;
-          if (separatorIndex != null && index == separatorIndex) {
-            final double separatorBottom = currentTop + widget.separatorGapHeight;
-            if (clampedDy < separatorBottom) {
-              final int nextIndex = math.min(index + 1, widget.letters.length - 1);
-              final String selectedLetter = widget.letters[nextIndex];
-              if (_activeLetter != selectedLetter) {
-                setState(() {
-                  _activeLetter = selectedLetter;
-                });
-                widget.onLetterTap(selectedLetter);
-              }
-              return;
-            }
-            currentTop = separatorBottom;
-          }
-        }
-      }
-      final int selectedLetterIndex = _letterIndexFromFillSlot(slotIndex, separatorIndex);
-      List<Widget> _buildFilledItems(int? separatorIndex) {
-        final items = <Widget>[];
-      final String selectedLetter = widget.letters[selectedLetterIndex];
-        for (int index = 0; index < widget.letters.length; index++) {
-          items.add(
-            Expanded(
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: _AlphabetIndexLetter(
-                    letter: widget.letters[index],
-                    isActive: _activeLetter == widget.letters[index],
-                  ),
-                ),
-              ),
-            ),
-          );
-      if (_activeLetter != selectedLetter) {
-          if (separatorIndex != null && index == separatorIndex) {
-            items.add(SizedBox(height: widget.separatorGapHeight));
-          }
-        }
-        setState(() {
-        return items;
-      }
-          _activeLetter = selectedLetter;
-        });
-        widget.onLetterTap(selectedLetter);
-      }
-      return;
-    }
-
-    double currentTop = _verticalPadding;
-
-    for (int index = 0; index < widget.letters.length; index++) {
-      final double itemBottom = currentTop + _itemExtent;
-      if (clampedDy < itemBottom) {
-        final String selectedLetter = widget.letters[index];
-        if (_activeLetter != selectedLetter) {
-          setState(() {
-            _activeLetter = selectedLetter;
-          });
-          widget.onLetterTap(selectedLetter);
-        }
-        return;
-      }
-
-      currentTop = itemBottom;
-
-      if (index != widget.letters.length - 1) {
-        final double gapBottom = currentTop + _itemGap;
-        if (clampedDy < gapBottom) {
-          final String selectedLetter = widget.letters[index];
-          if (_activeLetter != selectedLetter) {
-            setState(() {
-              _activeLetter = selectedLetter;
-            });
-            widget.onLetterTap(selectedLetter);
-          }
-          return;
-        }
-        currentTop = gapBottom;
-      }
+    for (var index = 0; index < widget.letters.length; index++) {
+      children.add(
+        _AlphabetIndexLetter(
+          letter: widget.letters[index],
+          isActive: widget.letters[index] == _activeLetter,
+          activeColor: activeColor,
+          inactiveColor: inactiveColor,
+          textStyle: textStyle,
+          minExtent: _minItemExtent,
+          onSelected: _activateLetter,
+        ),
+      );
 
       if (separatorIndex != null && index == separatorIndex) {
-        final double separatorBottom = currentTop + widget.separatorGapHeight;
-        if (clampedDy < separatorBottom) {
-          final int nextIndex = math.min(index + 1, widget.letters.length - 1);
-          final String selectedLetter = widget.letters[nextIndex];
-          if (_activeLetter != selectedLetter) {
-            setState(() {
-              _activeLetter = selectedLetter;
-            });
-            widget.onLetterTap(selectedLetter);
-          }
-          return;
-        }
-        currentTop = separatorBottom;
+        children.add(SizedBox(height: widget.separatorGap));
+      } else if (index < widget.letters.length - 1) {
+        children.add(SizedBox(height: widget.itemGap));
       }
     }
+
+    return children;
   }
 
-  int? get _separatorIndex {
-    final int? tailCount = widget.separatorBeforeLastCount;
-    if (tailCount == null || tailCount <= 0) {
-      return null;
-    }
+  List<Widget> _buildFilledChildren({
+    required BuildContext context,
+    required TextStyle? textStyle,
+    required Color activeColor,
+    required Color inactiveColor,
+    required double availableHeight,
+  }) {
+    final separatorIndex = _separatorIndex;
+    final separatorCount = separatorIndex == null ? 0 : 1;
+    final usableHeight = math.max(
+      1.0,
+      availableHeight - widget.verticalPadding * 2 - (separatorCount * widget.separatorGap),
+    );
+    final itemHeight = usableHeight / widget.letters.length;
 
-    if (widget.letters.length <= tailCount) {
-      return null;
-    }
-
-    return widget.letters.length - tailCount - 1;
-  }
-
-  List<Widget> _buildItems(int? separatorIndex) {
-    final items = <Widget>[];
-
-    for (int index = 0; index < widget.letters.length; index++) {
-      items.add(
-        Padding(
-          padding: EdgeInsets.only(
-            bottom: index == widget.letters.length - 1 ? 0 : _itemGap,
-          ),
+    final children = <Widget>[];
+    for (var index = 0; index < widget.letters.length; index++) {
+      children.add(
+        Expanded(
           child: _AlphabetIndexLetter(
             letter: widget.letters[index],
-            isActive: _activeLetter == widget.letters[index],
+            isActive: widget.letters[index] == _activeLetter,
+            activeColor: activeColor,
+            inactiveColor: inactiveColor,
+            textStyle: textStyle,
+            minExtent: itemHeight,
+            onSelected: _activateLetter,
           ),
         ),
       );
 
       if (separatorIndex != null && index == separatorIndex) {
-        items.add(const _AlphabetIndexSeparator());
+        children.add(SizedBox(height: widget.separatorGap));
       }
     }
 
-    return items;
+    return children;
   }
 
-  int _letterIndexFromFillSlot(int slotIndex, int? separatorIndex) {
-    if (separatorIndex == null) {
-      return slotIndex.clamp(0, widget.letters.length - 1);
+  String? _letterForLocalPosition({
+    required BuildContext context,
+    required Offset localPosition,
+    required double? availableHeight,
+  }) {
+    if (widget.letters.isEmpty) {
+      return null;
     }
 
-    if (slotIndex <= separatorIndex) {
-      return slotIndex.clamp(0, widget.letters.length - 1);
+    if (widget.fillHeight && availableHeight != null && availableHeight > 0) {
+      return _letterForFilledPosition(localPosition.dy, availableHeight);
     }
 
-    if (slotIndex == separatorIndex + 1) {
-      return math.min(separatorIndex + 1, widget.letters.length - 1);
+    return _letterForCompactPosition(localPosition.dy);
+  }
+
+  String? _letterForCompactPosition(double localDy) {
+    final separatorIndex = _separatorIndex;
+    var cursor = widget.verticalPadding;
+
+    for (var index = 0; index < widget.letters.length; index++) {
+      final extent = _minItemExtent;
+      if (localDy >= cursor && localDy < cursor + extent) {
+        return widget.letters[index];
+      }
+      cursor += extent;
+
+      final isSeparator = separatorIndex != null && index == separatorIndex;
+      if (isSeparator) {
+        if (localDy < cursor + widget.separatorGap) {
+          return widget.letters[math.min(index + 1, widget.letters.length - 1)];
+        }
+        cursor += widget.separatorGap;
+      } else if (index < widget.letters.length - 1) {
+        cursor += widget.itemGap;
+      }
     }
 
-    return (slotIndex - 1).clamp(0, widget.letters.length - 1);
+    return widget.letters.last;
+  }
+
+  String? _letterForFilledPosition(double localDy, double availableHeight) {
+    final separatorIndex = _separatorIndex;
+    final separatorCount = separatorIndex == null ? 0 : 1;
+    final usableHeight = math.max(
+      1.0,
+      availableHeight - widget.verticalPadding * 2 - (separatorCount * widget.separatorGap),
+    );
+    final itemHeight = usableHeight / widget.letters.length;
+    var cursor = widget.verticalPadding;
+
+    for (var index = 0; index < widget.letters.length; index++) {
+      if (localDy >= cursor && localDy < cursor + itemHeight) {
+        return widget.letters[index];
+      }
+      cursor += itemHeight;
+
+      if (separatorIndex != null && index == separatorIndex) {
+        if (localDy < cursor + widget.separatorGap) {
+          return widget.letters[math.min(index + 1, widget.letters.length - 1)];
+        }
+        cursor += widget.separatorGap;
+      }
+    }
+
+    return widget.letters.last;
+  }
+
+  void _activateLetter(String letter) {
+    if (!mounted || _activeLetter == letter) {
+      if (mounted) {
+        widget.onSelected(letter);
+      }
+      return;
+    }
+
+    setState(() {
+      _activeLetter = letter;
+    });
+    widget.onSelected(letter);
   }
 
   void _clearActiveLetter() {
-    if (_activeLetter == null) {
+    if (!mounted || _activeLetter == null) {
       return;
     }
 
@@ -345,57 +334,116 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
 }
 
 class _AlphabetIndexLetter extends StatelessWidget {
-  final String letter;
-  final bool isActive;
-
   const _AlphabetIndexLetter({
     required this.letter,
     required this.isActive,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.textStyle,
+    required this.minExtent,
+    required this.onSelected,
   });
+
+  final String letter;
+  final bool isActive;
+  final Color activeColor;
+  final Color inactiveColor;
+  final TextStyle? textStyle;
+  final double minExtent;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final Color surfaceColor = Theme.of(context).colorScheme.surface;
-    final Color textColor = Theme.of(context).colorScheme.onSurface;
-    final Color activeColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final color = isActive ? activeColor : inactiveColor;
+    final effectiveStyle = (textStyle ?? theme.textTheme.labelSmall)?.copyWith(
+      color: color,
+      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+      height: 1,
+    );
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      curve: Curves.easeOut,
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isActive ? activeColor.withOpacity(0.22) : surfaceColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        letter,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: isActive ? activeColor : textColor,
-        ),
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minExtent),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          if (isActive)
+            Positioned(
+              right: 30,
+              child: _AlphabetIndexBubble(
+                letter: letter,
+                activeColor: activeColor,
+              ),
+            ),
+          InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => onSelected(letter),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+              decoration: BoxDecoration(
+                color: isActive ? activeColor.withValues(alpha: 0.14) : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    letter,
+                    style: effectiveStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _AlphabetIndexSeparator extends StatelessWidget {
-  const _AlphabetIndexSeparator();
+class _AlphabetIndexBubble extends StatelessWidget {
+  const _AlphabetIndexBubble({
+    required this.letter,
+    required this.activeColor,
+  });
+
+  final String letter;
+  final Color activeColor;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 18,
-      height: 8,
-      child: Center(
-        child: Container(
-          width: 18,
-          height: 2,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24),
-            borderRadius: BorderRadius.circular(999),
+    final bubbleBackground = Theme.of(context).colorScheme.surface;
+
+    return AnimatedScale(
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      scale: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: bubbleBackground,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: activeColor.withValues(alpha: 0.22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Text(
+          letter,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: activeColor,
           ),
         ),
       ),

@@ -11,18 +11,19 @@ String? extractAsciiShortcutLabel(String value) {
     return null;
   }
 
-  final int codeUnit = trimmed.codeUnitAt(0);
+  final String firstCharacter = String.fromCharCode(trimmed.runes.first);
+  final String normalized = firstCharacter.toUpperCase();
 
-  if (codeUnit >= 48 && codeUnit <= 57) {
-    return String.fromCharCode(codeUnit);
+  if (normalized.codeUnitAt(0) >= 48 && normalized.codeUnitAt(0) <= 57) {
+    return normalized;
   }
 
-  if (codeUnit >= 65 && codeUnit <= 90) {
-    return String.fromCharCode(codeUnit);
+  if (normalized.codeUnitAt(0) >= 65 && normalized.codeUnitAt(0) <= 90) {
+    return normalized;
   }
 
-  if (codeUnit >= 97 && codeUnit <= 122) {
-    return String.fromCharCode(codeUnit - 32);
+  if (_isVisibleUnicodeShortcut(firstCharacter)) {
+    return firstCharacter;
   }
 
   return '#';
@@ -33,19 +34,26 @@ List<String> sortAsciiShortcutLabels(Iterable<String> labels) {
 
   int sortRank(String label) {
     if (label == '#') {
+      return 0;
+    }
+
+    final String trimmed = label.trim();
+    if (trimmed.isEmpty) {
       return 1000;
     }
 
-    final int codeUnit = label.codeUnitAt(0);
-    if (codeUnit >= 48 && codeUnit <= 57) {
-      return codeUnit - 48;
+    final String firstCharacter = String.fromCharCode(trimmed.runes.first);
+    final String normalized = firstCharacter.toUpperCase();
+
+    if (normalized.codeUnitAt(0) >= 48 && normalized.codeUnitAt(0) <= 57) {
+      return 10 + (normalized.codeUnitAt(0) - 48);
     }
 
-    if (codeUnit >= 65 && codeUnit <= 90) {
-      return 100 + (codeUnit - 65);
+    if (normalized.codeUnitAt(0) >= 65 && normalized.codeUnitAt(0) <= 90) {
+      return 100 + (normalized.codeUnitAt(0) - 65);
     }
 
-    return 1000;
+    return 1000 + trimmed.runes.first;
   }
 
   sortedLabels.sort((first, second) {
@@ -58,6 +66,20 @@ List<String> sortAsciiShortcutLabels(Iterable<String> labels) {
   });
 
   return sortedLabels;
+}
+
+bool _isVisibleUnicodeShortcut(String character) {
+  final int rune = character.runes.first;
+
+  if (rune <= 0x20) {
+    return false;
+  }
+
+  if (rune >= 0x7F && rune <= 0xA0) {
+    return false;
+  }
+
+  return true;
 }
 
 Future<void> shareSong(
