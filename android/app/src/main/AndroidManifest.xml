@@ -27,6 +27,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <!-- Android 14 (API 34) atau lebih: wajib untuk foregroundServiceType="mediaPlayback" -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- Android 13 (API 33) atau lebih: notifikasi player, harus diminta runtime juga -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:label="Music"
         android:name="${applicationName}"

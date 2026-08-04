@@ -29,6 +29,12 @@ Future<void> main() async {
     await Permission.mediaLibrary.request();
   }
 
+  // Android 13+ (termasuk 14 & 15) tidak menampilkan notifikasi player
+  // sama sekali kalau POST_NOTIFICATIONS belum diizinkan user
+  if (!await Permission.notification.isGranted) {
+    await Permission.notification.request();
+  }
+
   // initialize hive
   await Hive.initFlutter();
   await Hive.openBox(HiveBox.boxName);
