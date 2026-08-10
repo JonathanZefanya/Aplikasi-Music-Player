@@ -24,8 +24,10 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.xeadesta.music"
-    compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    // Dinaikkan dari flutter.compileSdkVersion (35) karena fluttertoast butuh SDK 36.
+    compileSdk 36
+    // Dinaikkan dari flutter.ndkVersion (26.3.x) mengikuti versi tertinggi yang diminta plugin.
+    ndkVersion "27.0.12077973"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
