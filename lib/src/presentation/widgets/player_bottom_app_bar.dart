@@ -77,9 +77,13 @@ class _PlayerBottomAppBarState extends State<PlayerBottomAppBar> {
                 return const SizedBox();
               }
 
-              var sequence = snapshot.data;
-              MediaItem mediaItem =
-                  sequence?.sequence[sequence.currentIndex].tag;
+              final MediaItem? mediaItem = snapshot.data.currentMediaItem;
+
+              if (mediaItem == null) {
+                return const SizedBox();
+              }
+
+              final SequenceState sequence = snapshot.data!;
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -116,8 +120,8 @@ class _PlayerBottomAppBarState extends State<PlayerBottomAppBar> {
                       color: Themes.getTheme().primaryColor,
                       padding: const EdgeInsets.all(0),
                       child: isExpanded
-                          ? _buildExpanded(sequence!, mediaItem)
-                          : _buildCollapsed(sequence!, mediaItem),
+                          ? _buildExpanded(sequence, mediaItem)
+                          : _buildCollapsed(sequence, mediaItem),
                     ),
                   ),
                 ),

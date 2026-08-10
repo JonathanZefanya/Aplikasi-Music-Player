@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music/src/bloc/player/player_bloc.dart';
 import 'package:music/src/bloc/playlists/playlists_cubit.dart';
 import 'package:music/src/bloc/home/home_bloc.dart';
+import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/core/router/app_router.dart';
+import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/presentation/widgets/player_bottom_app_bar.dart';
-import 'package:music/src/presentation/widgets/song_list_tile.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/src/core/theme/themes.dart';
 
@@ -49,13 +51,30 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
               ? const Center(
                   child: Text('No songs added to this playlist'),
                 )
-              : ListView.builder(
+              : ReorderableListView.builder(
+                  padding: const EdgeInsets.only(bottom: 100),
                   itemCount: _songs.length,
+                  onReorder: (oldIndex, newIndex) {
+                    final int target =
+                        newIndex > oldIndex ? newIndex - 1 : newIndex;
+
+                    setState(() {
+                      _songs.insert(target, _songs.removeAt(oldIndex));
+                    });
+
+                    context.read<PlaylistsCubit>().moveInPlaylist(
+                          widget.playlist.id,
+                          oldIndex,
+                          target,
+                        );
+                  },
                   itemBuilder: (context, index) {
                     final song = _songs[index];
-                    return SongListTile(
+
+                    return _buildTile(
+                      key: ValueKey('${index}_${song.id}'),
                       song: song,
-                      songs: _songs,
+                      index: index,
                     );
                   },
                 ),
@@ -72,6 +91,76 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           );
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildTile({
+    required Key key,
+    required SongModel song,
+    required int index,
+  }) {
+    return ListTile(
+      key: key,
+      onTap: () {
+        context.read<PlayerBloc>().add(
+              PlayerLoadSongs(
+                _songs,
+                sl<MusicPlayer>().getMediaItemFromSong(song),
+              ),
+            );
+      },
+      leading: QueryArtworkWidget(
+        keepOldArtwork: true,
+        id: song.albumId ?? 0,
+        type: ArtworkType.ALBUM,
+        artworkBorder: BorderRadius.circular(10),
+        size: 500,
+        nullArtworkWidget: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.grey.withOpacity(0.1),
+          ),
+          child: const Icon(Icons.music_note_outlined),
+        ),
+      ),
+      title: Text(
+        song.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        '${song.artist ?? 'Unknown'} | ${song.album ?? 'Unknown'}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.8),
+        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              context.read<PlaylistsCubit>().removeFromPlaylist(
+                    widget.playlist.id,
+                    song,
+                  );
+            },
+            icon: const Icon(Icons.remove_circle_outline),
+            tooltip: 'Remove from playlist',
+          ),
+          const SizedBox(width: 8),
+          ReorderableDragStartListener(
+            index: index,
+            child: const Icon(Icons.drag_handle_outlined),
+          ),
+        ],
       ),
     );
   }
@@ -133,12 +222,11 @@ class _AddSongToPlaylistState extends State<AddSongToPlaylist> {
                           song,
                         );
                   } else {
-                    // TODO: Remove song from playlist
-                    // widget.songs.remove(song);
-                    // context.read<PlaylistsCubit>().removeFromPlaylist(
-                    //       widget.playlist.id,
-                    //       song.id,
-                    //     );
+                    widget.songs.removeWhere((e) => e.data == song.data);
+                    context.read<PlaylistsCubit>().removeFromPlaylist(
+                          widget.playlist.id,
+                          song,
+                        );
                   }
                   setState(() {});
                 },

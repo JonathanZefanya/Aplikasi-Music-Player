@@ -14,6 +14,7 @@ import 'package:music/src/core/helpers/helpers.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/services/hive_box.dart';
+import 'package:music/src/presentation/widgets/add_to_playlist_sheet.dart';
 import 'package:music/src/presentation/widgets/alphabet_index_bar.dart';
 import 'package:music/src/presentation/widgets/song_list_tile.dart';
 
@@ -34,6 +35,50 @@ class _SongsViewState extends State<SongsView>
   bool isLoading = true;
   final _scrollController = ScrollController();
   List<GlobalKey> _songItemKeys = [];
+  final Set<int> _selectedIds = <int>{};
+
+  bool get _selectionMode => _selectedIds.isNotEmpty;
+
+  List<SongModel> get _selectedSongs =>
+      songs.where((song) => _selectedIds.contains(song.id)).toList();
+
+  void _toggleSelection(SongModel song) {
+    setState(() {
+      if (!_selectedIds.remove(song.id)) {
+        _selectedIds.add(song.id);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedIds.clear();
+    });
+  }
+
+  void _selectAll() {
+    setState(() {
+      _selectedIds
+        ..clear()
+        ..addAll(songs.map((song) => song.id));
+    });
+  }
+
+  void _playSelected() {
+    final List<SongModel> selected = _selectedSongs;
+
+    if (selected.isEmpty) {
+      return;
+    }
+
+    context.read<PlayerBloc>().add(
+          PlayerLoadSongs(
+            selected,
+            sl<MusicPlayer>().getMediaItemFromSong(selected.first),
+          ),
+        );
+    _clearSelection();
+  }
 
   @override
   void initState() {
@@ -79,27 +124,33 @@ class _SongsViewState extends State<SongsView>
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // number of songs
-                                  Text(
-                                    '${songs.length} songs',
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  // sort button
-                                  IconButton(
-                                    onPressed: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        builder: (context) => const SortBottomSheet(),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.sort),
-                                  ),
-                                ],
-                              ),
+                              child: _selectionMode
+                                  ? _buildSelectionBar()
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // number of songs
+                                        Text(
+                                          '${songs.length} songs',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
+                                        ),
+                                        // sort button
+                                        IconButton(
+                                          onPressed: () {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              builder: (context) =>
+                                                  const SortBottomSheet(),
+                                            );
+                                          },
+                                          icon: const Icon(Icons.sort),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ),
                           SliverToBoxAdapter(
@@ -212,6 +263,11 @@ class _SongsViewState extends State<SongsView>
                                         key: _songItemKeys[index],
                                         song: song,
                                         songs: songs,
+                                        selectionMode: _selectionMode,
+                                        selected:
+                                            _selectedIds.contains(song.id),
+                                        onSelectionToggle: () =>
+                                            _toggleSelection(song),
                                       ),
                                     ),
                                   );
@@ -253,6 +309,81 @@ class _SongsViewState extends State<SongsView>
               ),
             ),
     );
+  }
+
+  Widget _buildSelectionBar() {
+    return Row(
+      children: [
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          onPressed: _clearSelection,
+          icon: const Icon(Icons.close),
+          tooltip: 'Cancel',
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            '${_selectedIds.length} selected',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        IconButton(
+          onPressed: _selectAll,
+          icon: const Icon(Icons.select_all),
+          tooltip: 'Select all',
+        ),
+        IconButton(
+          onPressed: _playSelected,
+          icon: const Icon(Icons.play_arrow),
+          tooltip: 'Play',
+        ),
+        PopupMenuButton<String>(
+          onSelected: _onBatchAction,
+          itemBuilder: (context) => const [
+            PopupMenuItem<String>(
+              value: 'queue',
+              child: Text('Add to queue'),
+            ),
+            PopupMenuItem<String>(
+              value: 'next',
+              child: Text('Play next'),
+            ),
+            PopupMenuItem<String>(
+              value: 'playlist',
+              child: Text('Add to playlist'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onBatchAction(String action) async {
+    final List<SongModel> selected = _selectedSongs;
+
+    if (selected.isEmpty) {
+      return;
+    }
+
+    switch (action) {
+      case 'queue':
+        context.read<PlayerBloc>().add(PlayerAddAllToQueue(selected));
+        _clearSelection();
+        break;
+      case 'next':
+        for (final SongModel song in selected.reversed) {
+          context.read<PlayerBloc>().add(PlayerPlayNext(song));
+        }
+        _clearSelection();
+        break;
+      case 'playlist':
+        await showAddToPlaylistSheet(context, selected);
+        if (mounted) {
+          _clearSelection();
+        }
+        break;
+    }
   }
 
   void scrollToTop() {

@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import 'package:music/src/core/theme/themes.dart';
 
 import 'package:music/src/app.dart';
 import 'package:music/src/bloc/favorites/favorites_bloc.dart';
@@ -17,6 +22,22 @@ import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/services/hive_box.dart';
 
+Future<void> _cacheDynamicColorSeed() async {
+  if (!Platform.isAndroid) {
+    return;
+  }
+
+  try {
+    final palette = await DynamicColorPlugin.getCorePalette();
+
+    if (palette != null) {
+      await Themes.setDynamicColorSeed(Color(palette.primary.get(40)));
+    }
+  } catch (_) {
+    // Ignore
+  }
+}
+
 Future<void> main() async {
   // initialize flutter engine
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +50,6 @@ Future<void> main() async {
     await Permission.mediaLibrary.request();
   }
 
-  // Android 13+ (termasuk 14 & 15) tidak menampilkan notifikasi player
-  // sama sekali kalau POST_NOTIFICATIONS belum diizinkan user
   if (!await Permission.notification.isGranted) {
     await Permission.notification.request();
   }
@@ -38,6 +57,8 @@ Future<void> main() async {
   // initialize hive
   await Hive.initFlutter();
   await Hive.openBox(HiveBox.boxName);
+
+  await _cacheDynamicColorSeed();
 
   // initialize audio service
   await sl<MusicPlayer>().init();

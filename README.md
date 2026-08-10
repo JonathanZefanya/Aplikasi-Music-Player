@@ -7,24 +7,7 @@ Music is a local music player app that plays music from your device built with F
 - Android
 
 ## Features
-
-- Play music from your device
-- Background audio
-- Notification controls
-- Lock screen controls
-- Play, pause, skip, previous, seek
-- Shuffle and repeat
-- Search for music, artists, albums, genres
-- Sort by (title, artist, album, duration, date, size, etc)
-- Order by (ascending, descending)
-- Favorites (Add songs, remove songs)
-- Recently played
-- Artists
-- Albums
-- Genres
-- Share music
-- Settings
-- Themes (multiple themes)
+Look At [FEATURE.md](FEATURE.md)
 
 ## Installation
 

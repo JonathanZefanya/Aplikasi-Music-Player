@@ -177,6 +177,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               );
             },
           ),
+          // folders
+          ListTile(
+            leading: const Icon(Icons.folder_outlined),
+            title: const Text('Folders'),
+            onTap: () {
+              Navigator.of(context).pushNamed(AppRouter.foldersRoute);
+            },
+          ),
+          // smart playlists
+          ListTile(
+            leading: const Icon(Icons.auto_awesome_outlined),
+            title: const Text('Smart Playlists'),
+            onTap: () {
+              Navigator.of(context).pushNamed(AppRouter.smartPlaylistsRoute);
+            },
+          ),
+          // statistics
+          ListTile(
+            leading: const Icon(Icons.bar_chart_outlined),
+            title: const Text('Statistics'),
+            onTap: () {
+              Navigator.of(context).pushNamed(AppRouter.statisticsRoute);
+            },
+          ),
           // settings
           ListTile(
             leading: const Icon(Icons.settings),

@@ -11,6 +11,8 @@ class PlaylistsCubit extends Cubit<PlaylistsState> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
   List<PlaylistModel> playlists = [];
 
+  final Map<int, Map<String, int>> _memberIds = {};
+
   Future<void> queryPlaylists() async {
     emit(PlaylistsLoading());
     playlists = await _audioQuery.queryPlaylists();
@@ -26,44 +28,69 @@ class PlaylistsCubit extends Cubit<PlaylistsState> {
 
   Future<void> queryPlaylistSongs(int playlistId) async {
     emit(PlaylistsLoading());
-    List<SongModel> playlistSongs = await _audioQuery.queryAudiosFrom(
+    emit(PlaylistsSongsLoaded(await _resolvePlaylistSongs(playlistId)));
+  }
+
+  Future<List<SongModel>> _resolvePlaylistSongs(int playlistId) async {
+    final List<SongModel> members = await _audioQuery.queryAudiosFrom(
       AudiosFromType.PLAYLIST,
       playlistId,
     );
 
-    // TODO: NOTE: this is just a workaround. on_audio_query has a bug that changes songs' _uri and id
-    List<SongModel> allSongs = await _audioQuery.querySongs();
-    allSongs.removeWhere(
-      (song) => !playlistSongs.any((element) => element.data == song.data),
-    );
+    _memberIds[playlistId] = {
+      for (final SongModel member in members) member.data: member.id,
+    };
 
-    emit(PlaylistsSongsLoaded(allSongs));
+    final List<SongModel> allSongs = await _audioQuery.querySongs();
+    final Map<String, SongModel> byPath = {
+      for (final SongModel song in allSongs) song.data: song,
+    };
+
+    return [
+      for (final SongModel member in members)
+        if (byPath.containsKey(member.data)) byPath[member.data]!,
+    ];
   }
 
   Future<void> addToPlaylist(int playlistId, SongModel song) async {
     emit(PlaylistsLoading());
-    await _audioQuery.queryAudiosFrom(
-      AudiosFromType.PLAYLIST,
-      playlistId,
-    );
-
     await _audioQuery.addToPlaylist(playlistId, song.id);
     await queryPlaylistSongs(playlistId);
   }
 
-  // TODO: NOTE: Doesn't work. on_audio_query has a bug
-  // Future<void> removeFromPlaylist(
-  //   int playlistId,
-  //   int songId,
-  // ) async {
-  //   emit(PlaylistsLoading());
-  //   await _audioQuery.removeFromPlaylist(playlistId, songId);
-  //   await queryPlaylistSongs(playlistId);
-  // }
+  Future<int> addSongsToPlaylist(int playlistId, List<SongModel> songs) async {
+    int added = 0;
+
+    for (final SongModel song in songs) {
+      if (await _audioQuery.addToPlaylist(playlistId, song.id)) {
+        added++;
+      }
+    }
+
+    return added;
+  }
+
+  Future<void> removeFromPlaylist(int playlistId, SongModel song) async {
+    final int? memberId = _memberIds[playlistId]?[song.data];
+
+    if (memberId == null) {
+      return;
+    }
+
+    emit(PlaylistsLoading());
+    await _audioQuery.removeFromPlaylist(playlistId, memberId);
+    await queryPlaylistSongs(playlistId);
+  }
+
+  Future<void> moveInPlaylist(int playlistId, int from, int to) async {
+    await _audioQuery.moveItemTo(playlistId, from, to);
+    emit(PlaylistsSongsLoaded(await _resolvePlaylistSongs(playlistId)));
+  }
 
   Future<void> deletePlaylist(int playlistId) async {
     emit(PlaylistsLoading());
     await _audioQuery.removePlaylist(playlistId);
+    _memberIds.remove(playlistId);
     playlists = await _audioQuery.queryPlaylists();
     emit(PlaylistsLoaded(playlists));
   }

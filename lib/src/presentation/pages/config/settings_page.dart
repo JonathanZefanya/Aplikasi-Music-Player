@@ -68,6 +68,39 @@ class _SettingsPageState extends State<SettingsPage> {
                     Navigator.of(context).pushNamed(AppRouter.scanRoute);
                   },
                 ),
+                // library filters
+                ListTile(
+                  leading: const Icon(Icons.library_music_outlined),
+                  title: const Text('Library'),
+                  subtitle: const Text(
+                    'Sembunyikan audio dan folder tertentu',
+                  ),
+                  onTap: () async {
+                    Navigator.of(context).pushNamed(AppRouter.libraryRoute);
+                  },
+                ),
+                // playback behaviour
+                ListTile(
+                  leading: const Icon(Icons.play_circle_outline),
+                  title: const Text('Playback'),
+                  subtitle: const Text(
+                    'Fade, headphone dan bluetooth',
+                  ),
+                  onTap: () async {
+                    Navigator.of(context).pushNamed(AppRouter.playbackRoute);
+                  },
+                ),
+                // backup & restore
+                ListTile(
+                  leading: const Icon(Icons.backup_outlined),
+                  title: const Text('Backup & Restore'),
+                  subtitle: const Text(
+                    'Cadangkan setelan, favorit, dan playlist',
+                  ),
+                  onTap: () async {
+                    Navigator.of(context).pushNamed(AppRouter.backupRoute);
+                  },
+                ),
                 // language
                 // TODO: add language selection
                 // ListTile(

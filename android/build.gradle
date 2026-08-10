@@ -5,11 +5,10 @@ allprojects {
     }
 }
 
-subprojects {
-    afterEvaluate {
+gradle.projectsEvaluated {
+    subprojects {
         tasks.withType(JavaCompile).configureEach {
-            sourceCompatibility = JavaVersion.VERSION_17.toString()
-            targetCompatibility = JavaVersion.VERSION_17.toString()
+            options.compilerArgs << '-Xlint:-options'
         }
     }
 }
@@ -42,10 +41,17 @@ subprojects { subproject ->
             }
         }
 
-        subproject.tasks.configureEach { task ->
-            if (task.hasProperty('kotlinOptions')) {
-                task.kotlinOptions {
-                    jvmTarget = '17'
+        // Kotlin harus mengikuti target Java milik modul itu sendiri. Memaksa '17' di sini
+        // membuat modul yang javac-nya tetap 1.8 gagal dengan
+        // "Inconsistent JVM-target compatibility".
+        subproject.afterEvaluate {
+            def javaTarget = androidExt.compileOptions.targetCompatibility.toString()
+
+            subproject.tasks.configureEach { task ->
+                if (task.hasProperty('kotlinOptions')) {
+                    task.kotlinOptions {
+                        jvmTarget = javaTarget
+                    }
                 }
             }
         }

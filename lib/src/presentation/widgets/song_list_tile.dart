@@ -14,17 +14,25 @@ import 'package:music/src/core/constants/assets.dart';
 import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
+import 'package:music/src/presentation/pages/details/edit_metadata_page.dart';
+import 'package:music/src/presentation/widgets/add_to_playlist_sheet.dart';
 
 class SongListTile extends StatefulWidget {
   final SongModel song;
   final List<SongModel> songs;
   final bool showAlbumArt;
+  final bool selectionMode;
+  final bool selected;
+  final VoidCallback? onSelectionToggle;
 
   const SongListTile({
     super.key,
     required this.song,
     required this.songs,
     this.showAlbumArt = true,
+    this.selectionMode = false,
+    this.selected = false,
+    this.onSelectionToggle,
   });
 
   @override
@@ -40,14 +48,17 @@ class _SongListTileState extends State<SongListTile> {
       key: ValueKey(widget.song.id),
       stream: player.sequenceState,
       builder: (context, snapshot) {
-        MediaItem? currentMediaItem;
-        if (snapshot.hasData) {
-          var sequence = snapshot.data;
-          currentMediaItem = sequence?.sequence[sequence.currentIndex].tag;
-        }
+        final MediaItem? currentMediaItem = snapshot.data.currentMediaItem;
 
         return ListTile(
+          selected: widget.selected,
+          onLongPress: widget.onSelectionToggle,
           onTap: () async {
+            if (widget.selectionMode) {
+              widget.onSelectionToggle?.call();
+              return;
+            }
+
             MediaItem mediaItem = player.getMediaItemFromSong(widget.song);
 
             // if this is currently playing, navigate to player
@@ -65,10 +76,15 @@ class _SongListTileState extends State<SongListTile> {
                   );
             }
           },
-          leading: _buildLeading(currentMediaItem),
+          leading: widget.selectionMode
+              ? Checkbox(
+                  value: widget.selected,
+                  onChanged: (_) => widget.onSelectionToggle?.call(),
+                )
+              : _buildLeading(currentMediaItem),
           title: _buildTitle(currentMediaItem, context),
           subtitle: _buildSubtitle(),
-          trailing: _buildTrailing(context),
+          trailing: widget.selectionMode ? null : _buildTrailing(context),
         );
       },
     );
@@ -176,6 +192,8 @@ class _SongListTileState extends State<SongListTile> {
   }
 
   Future<dynamic> _buildModalBottomSheet(BuildContext context) {
+    final BuildContext pageContext = context;
+
     return showModalBottomSheet(
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -193,17 +211,43 @@ class _SongListTileState extends State<SongListTile> {
                   top: Radius.circular(25),
                 ),
               ),
-              leading: const Icon(Icons.playlist_add_outlined),
+              leading: const Icon(Icons.queue_outlined),
               title: const Text('Add to queue'),
               onTap: () {
+                context.read<PlayerBloc>().add(
+                      PlayerAddToQueue(widget.song),
+                    );
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.playlist_play_outlined),
+              title: const Text('Play next'),
+              onTap: () {
+                context.read<PlayerBloc>().add(
+                      PlayerPlayNext(widget.song),
+                    );
                 Navigator.of(context).pop();
               },
             ),
             ListTile(
               leading: const Icon(Icons.playlist_add_outlined),
               title: const Text('Add to playlist'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await showAddToPlaylistSheet(pageContext, [widget.song]);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Edit metadata'),
               onTap: () {
                 Navigator.of(context).pop();
+                Navigator.of(pageContext).push(
+                  MaterialPageRoute<dynamic>(
+                    builder: (_) => EditMetadataPage(song: widget.song),
+                  ),
+                );
               },
             ),
             ListTile(

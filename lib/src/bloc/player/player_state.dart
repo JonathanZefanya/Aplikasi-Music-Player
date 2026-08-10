@@ -58,3 +58,21 @@ final class PlayerShuffleModeEnabledSet extends PlayerState {
 
   PlayerShuffleModeEnabledSet(this.shuffleModeEnabled);
 }
+
+final class PlayerQueueUpdated extends PlayerState {
+  final String message;
+
+  PlayerQueueUpdated(this.message);
+}
+
+final class PlayerPitchSet extends PlayerState {
+  final double pitch;
+
+  PlayerPitchSet(this.pitch);
+}
+
+final class PlayerSleepTimerSet extends PlayerState {
+  final Duration? duration;
+
+  PlayerSleepTimerSet(this.duration);
+}

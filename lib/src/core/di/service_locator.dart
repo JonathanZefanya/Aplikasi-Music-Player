@@ -8,13 +8,17 @@ import 'package:music/src/bloc/scan/scan_cubit.dart';
 import 'package:music/src/bloc/search/search_bloc.dart';
 import 'package:music/src/bloc/song/song_bloc.dart';
 import 'package:music/src/bloc/theme/theme_bloc.dart';
+import 'package:music/src/data/repositories/backup_repository.dart';
 import 'package:music/src/data/repositories/favorites_repository.dart';
 import 'package:music/src/data/repositories/home_repository.dart';
+import 'package:music/src/data/repositories/metadata_repository.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/repositories/recents_repository.dart';
 import 'package:music/src/data/repositories/search_repository.dart';
 import 'package:music/src/data/repositories/song_repository.dart';
+import 'package:music/src/data/repositories/stats_repository.dart';
 import 'package:music/src/data/repositories/theme_repository.dart';
+import 'package:music/src/data/services/artwork_palette.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 final sl = GetIt.instance;
@@ -42,6 +46,10 @@ void init() {
   sl.registerLazySingleton(() => FavoritesRepository());
   sl.registerLazySingleton(() => RecentsRepository());
   sl.registerLazySingleton(() => SearchRepository());
+  sl.registerLazySingleton(() => StatsRepository());
+  sl.registerLazySingleton(() => ArtworkPalette());
+  sl.registerLazySingleton(() => BackupRepository());
+  sl.registerLazySingleton(() => MetadataRepository());
 
   // Third Party
   sl.registerLazySingleton(() => OnAudioQuery());

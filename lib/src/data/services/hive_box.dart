@@ -23,4 +23,21 @@ class HiveBox {
 
   static const String shuffleModeKey = 'shuffleMode';
   static const String loopModeKey = 'loopMode';
+
+  static const String speedKey = 'playbackSpeed';
+  static const String pitchKey = 'playbackPitch';
+  static const String fadeDurationKey = 'fadeDurationMs';
+  static const String pauseOnDisconnectKey = 'pauseOnDisconnect';
+  static const String resumeOnReconnectKey = 'resumeOnReconnect';
+  static const String playbackPositionsKey = 'playbackPositions';
+
+  static const String hideWhatsAppKey = 'hideWhatsAppAudio';
+  static const String hideTelegramKey = 'hideTelegramAudio';
+  static const String excludedFoldersKey = 'excludedFolders';
+
+  static const String playCountsKey = 'playCounts';
+  static const String listeningTimeKey = 'listeningTime';
+  static const String playHistoryKey = 'playHistory';
+
+  static const String dynamicColorSeedKey = 'dynamicColorSeed';
 }

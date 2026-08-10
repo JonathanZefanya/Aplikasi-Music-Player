@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:music/src/presentation/pages/config/backup_page.dart';
+import 'package:music/src/presentation/pages/config/library_page.dart';
+import 'package:music/src/presentation/pages/config/playback_page.dart';
+import 'package:music/src/presentation/pages/library/folders_page.dart';
+import 'package:music/src/presentation/pages/library/smart_playlists_page.dart';
+import 'package:music/src/presentation/pages/library/statistics_page.dart';
 import 'package:music/src/presentation/pages/config/scan_page.dart';
 import 'package:music/src/presentation/pages/config/settings_page.dart';
 import 'package:music/src/presentation/pages/playlists/playlist_details_page.dart';
@@ -31,6 +37,12 @@ class AppRouter {
   static const String queueRoute = '/queue';
   static const String searchRoute = '/search';
   static const String scanRoute = '/scan';
+  static const String playbackRoute = '/playback';
+  static const String libraryRoute = '/library';
+  static const String backupRoute = '/backup';
+  static const String foldersRoute = '/folders';
+  static const String smartPlaylistsRoute = '/smartPlaylists';
+  static const String statisticsRoute = '/statistics';
   static const String addSongToPlaylistRoute = '/addSongToPlaylist';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -85,6 +97,30 @@ class AppRouter {
       case scanRoute:
         return MaterialPageRoute<dynamic>(
           builder: (_) => const ScanPage(),
+        );
+      case playbackRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const PlaybackPage(),
+        );
+      case libraryRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const LibraryPage(),
+        );
+      case backupRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const BackupPage(),
+        );
+      case foldersRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const FoldersPage(),
+        );
+      case smartPlaylistsRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const SmartPlaylistsPage(),
+        );
+      case statisticsRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const StatisticsPage(),
         );
       case playlistDetailsRoute:
         return MaterialPageRoute<dynamic>(

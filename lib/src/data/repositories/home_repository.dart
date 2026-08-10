@@ -29,7 +29,64 @@ class HomeRepository {
               _box.get(HiveBox.minSongSizeKey, defaultValue: 0) * 1024;
     });
 
+    songs.removeWhere((song) => isExcluded(song.data));
+
     return songs;
+  }
+
+  bool isExcluded(String path) {
+    final String normalized = path.replaceAll('\\', '/').toLowerCase();
+
+    if (_box.get(HiveBox.hideWhatsAppKey, defaultValue: false) as bool &&
+        normalized.contains('whatsapp')) {
+      return true;
+    }
+
+    if (_box.get(HiveBox.hideTelegramKey, defaultValue: false) as bool &&
+        normalized.contains('telegram')) {
+      return true;
+    }
+
+    for (final String folder in excludedFolders) {
+      if (normalized.startsWith(folder.replaceAll('\\', '/').toLowerCase())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  List<String> get excludedFolders => List<String>.from(
+        _box.get(HiveBox.excludedFoldersKey, defaultValue: <String>[]) as List,
+      );
+
+  Future<void> setExcludedFolders(List<String> folders) async {
+    await _box.put(HiveBox.excludedFoldersKey, folders);
+  }
+
+  Future<List<SongModel>> getRecentlyAdded() async {
+    final List<SongModel> songs = await getSongs();
+
+    songs.sort(
+      (first, second) => (second.dateAdded ?? 0).compareTo(first.dateAdded ?? 0),
+    );
+
+    return songs;
+  }
+
+  Future<Map<String, List<SongModel>>> getFolders() async {
+    final List<SongModel> songs = await getSongs();
+    final Map<String, List<SongModel>> folders = {};
+
+    for (final SongModel song in songs) {
+      final String path = song.data.replaceAll('\\', '/');
+      final int separator = path.lastIndexOf('/');
+      final String folder = separator == -1 ? '/' : path.substring(0, separator);
+
+      folders.putIfAbsent(folder, () => []).add(song);
+    }
+
+    return folders;
   }
 
   Future<List<ArtistModel>> getArtists() async {

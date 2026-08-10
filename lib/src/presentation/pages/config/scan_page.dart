@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:lottie/lottie.dart';
+import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/bloc/scan/scan_cubit.dart';
 import 'package:music/src/core/constants/assets.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
@@ -29,6 +30,14 @@ class _ScanPageState extends State<ScanPage> {
     defaultValue: 0,
   );
   List<int> sizeGroupValue = [0, 50, 100, 200, 500];
+
+  void _refreshLibrary() {
+    if (!mounted) {
+      return;
+    }
+
+    context.read<HomeBloc>().add(GetSongsEvent());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +79,11 @@ class _ScanPageState extends State<ScanPage> {
                 onChanged: (value) {
                   setState(() {
                     durationValue = value as int;
-                    context.read<ScanCubit>().setDuration(durationValue);
                   });
+                  context
+                      .read<ScanCubit>()
+                      .setDuration(durationValue)
+                      .then((_) => _refreshLibrary());
                 },
               ),
             const SizedBox(height: 16),
@@ -93,8 +105,11 @@ class _ScanPageState extends State<ScanPage> {
                 onChanged: (value) {
                   setState(() {
                     sizeValue = value as int;
-                    context.read<ScanCubit>().setSize(sizeValue);
                   });
+                  context
+                      .read<ScanCubit>()
+                      .setSize(sizeValue)
+                      .then((_) => _refreshLibrary());
                 },
               ),
           ],

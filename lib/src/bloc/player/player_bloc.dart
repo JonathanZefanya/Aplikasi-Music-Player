@@ -109,5 +109,81 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
         emit(PlayerError(e.toString()));
       }
     });
+
+    on<PlayerAddToQueue>((event, emit) async {
+      try {
+        await repository.addToQueue(event.song);
+        emit(PlayerQueueUpdated('Added to queue'));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerAddAllToQueue>((event, emit) async {
+      try {
+        await repository.addAllToQueue(event.songs);
+        emit(
+          PlayerQueueUpdated(
+            '${event.songs.length} songs added to queue',
+          ),
+        );
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerPlayNext>((event, emit) async {
+      try {
+        await repository.playNext(event.song);
+        emit(PlayerQueueUpdated('Playing next'));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerRemoveFromQueue>((event, emit) async {
+      try {
+        await repository.removeFromQueue(event.index);
+        emit(PlayerQueueUpdated('Removed from queue'));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerMoveInQueue>((event, emit) async {
+      try {
+        await repository.moveInQueue(event.oldIndex, event.newIndex);
+        emit(PlayerQueueUpdated('Queue reordered'));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerClearQueue>((event, emit) async {
+      try {
+        await repository.clearQueue();
+        emit(PlayerQueueUpdated('Queue cleared'));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerSetPitch>((event, emit) async {
+      try {
+        await repository.setPitch(event.pitch);
+        emit(PlayerPitchSet(event.pitch));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
+
+    on<PlayerSetSleepTimer>((event, emit) async {
+      try {
+        await repository.setSleepTimer(event.duration);
+        emit(PlayerSleepTimerSet(event.duration));
+      } catch (e) {
+        emit(PlayerError(e.toString()));
+      }
+    });
   }
 }

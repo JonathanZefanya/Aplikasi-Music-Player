@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 class Themes {
   static const String customColorThemeName = 'Custom Color';
   static const String customImageThemeName = 'Custom Image';
+  static const String amoledThemeName = 'AMOLED';
+  static const String materialYouThemeName = 'Material You';
 
   static final List<ThemeColor> _themes = [
     PurpleTheme(),
@@ -20,6 +22,7 @@ class Themes {
     BlackTheme(),
     WhiteTheme(),
     GrayTheme(),
+    AmoledTheme(),
   ];
 
   static final List<String> _themeNames = [
@@ -33,6 +36,8 @@ class Themes {
     'Black',
     'White',
     'Gray',
+    amoledThemeName,
+    materialYouThemeName,
     customColorThemeName,
     customImageThemeName,
   ];
@@ -62,6 +67,10 @@ class Themes {
         return _themes[8];
       case 'Gray':
         return _themes[9];
+      case amoledThemeName:
+        return AmoledTheme();
+      case materialYouThemeName:
+        return _getMaterialYouTheme();
       case customColorThemeName:
         return _getCustomColorTheme();
       case customImageThemeName:
@@ -152,6 +161,21 @@ class Themes {
 
   static Brightness estimateBrightness(Color color) {
     return ThemeData.estimateBrightnessForColor(color);
+  }
+
+  static ThemeColor _getMaterialYouTheme() {
+    final Box<dynamic> box = Hive.box(HiveBox.boxName);
+    final int seedValue = box.get(
+      HiveBox.dynamicColorSeedKey,
+      defaultValue: const Color(0xff5c03bc).value,
+    ) as int;
+
+    return MaterialYouTheme(seedColor: Color(seedValue));
+  }
+
+  static Future<void> setDynamicColorSeed(Color seedColor) async {
+    final Box<dynamic> box = Hive.box(HiveBox.boxName);
+    await box.put(HiveBox.dynamicColorSeedKey, seedColor.value);
   }
 
   static ThemeColor _getCustomColorTheme() {
@@ -273,6 +297,48 @@ abstract class ThemeColor {
   });
 
   Color get adaptiveTextColor => Themes.getAdaptiveTextColor(primaryColor);
+}
+
+class AmoledTheme extends ThemeColor {
+  AmoledTheme()
+      : super(
+          themeName: Themes.amoledThemeName,
+          primaryColor: const Color(0xff000000),
+          secondaryColor: const Color(0xff000000),
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.grey,
+            brightness: Brightness.dark,
+          ),
+          linearGradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xff000000),
+              Color(0xff000000),
+            ],
+          ),
+        );
+}
+
+class MaterialYouTheme extends ThemeColor {
+  MaterialYouTheme({required Color seedColor})
+      : super(
+          themeName: Themes.materialYouThemeName,
+          primaryColor: Themes._shiftLightness(seedColor, -0.28),
+          secondaryColor: seedColor,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: seedColor,
+            brightness: Brightness.dark,
+          ),
+          linearGradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Themes._shiftLightness(seedColor, -0.28),
+              seedColor,
+            ],
+          ),
+        );
 }
 
 class CustomColorTheme extends ThemeColor {

@@ -55,3 +55,48 @@ class PlayerSetShuffleModeEnabled extends PlayerEvent {
 
   PlayerSetShuffleModeEnabled(this.shuffleModeEnabled);
 }
+
+class PlayerAddToQueue extends PlayerEvent {
+  final SongModel song;
+
+  PlayerAddToQueue(this.song);
+}
+
+class PlayerAddAllToQueue extends PlayerEvent {
+  final List<SongModel> songs;
+
+  PlayerAddAllToQueue(this.songs);
+}
+
+class PlayerPlayNext extends PlayerEvent {
+  final SongModel song;
+
+  PlayerPlayNext(this.song);
+}
+
+class PlayerRemoveFromQueue extends PlayerEvent {
+  final int index;
+
+  PlayerRemoveFromQueue(this.index);
+}
+
+class PlayerMoveInQueue extends PlayerEvent {
+  final int oldIndex;
+  final int newIndex;
+
+  PlayerMoveInQueue(this.oldIndex, this.newIndex);
+}
+
+class PlayerClearQueue extends PlayerEvent {}
+
+class PlayerSetPitch extends PlayerEvent {
+  final double pitch;
+
+  PlayerSetPitch(this.pitch);
+}
+
+class PlayerSetSleepTimer extends PlayerEvent {
+  final Duration? duration;
+
+  PlayerSetSleepTimer(this.duration);
+}

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:marquee/marquee.dart';
@@ -12,8 +13,11 @@ import 'package:music/src/bloc/song/song_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/repositories/song_repository.dart';
+import 'package:music/src/data/services/artwork_palette.dart';
 import 'package:music/src/presentation/widgets/animated_favorite_button.dart';
-import 'package:music/src/presentation/widgets/seek_bar.dart';
+import 'package:music/src/presentation/widgets/glass_container.dart';
+import 'package:music/src/presentation/widgets/lyrics_sheet.dart';
+import 'package:music/src/presentation/widgets/waveform_seek_bar.dart';
 
 class PlayerPage extends StatefulWidget {
   const PlayerPage({
@@ -72,6 +76,18 @@ class _PlayerPageState extends State<PlayerPage> {
                   },
                   child: const Text('Sleep timer'),
                 ),
+                PopupMenuItem(
+                  onTap: () {
+                    showSpeedAndPitch(context);
+                  },
+                  child: const Text('Speed & pitch'),
+                ),
+                PopupMenuItem(
+                  onTap: () {
+                    showLyrics(context);
+                  },
+                  child: const Text('Lyrics'),
+                ),
               ];
             },
           ),
@@ -81,17 +97,16 @@ class _PlayerPageState extends State<PlayerPage> {
       body: StreamBuilder<SequenceState?>(
         stream: player.sequenceState,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          final MediaItem? mediaItem = snapshot.data.currentMediaItem;
+          if (mediaItem == null) {
             return const SizedBox.shrink();
           }
-          final sequence = snapshot.data;
-          MediaItem? mediaItem = sequence!.sequence[sequence.currentIndex].tag;
           return Stack(
             children: [
               QueryArtworkWidget(
                 keepOldArtwork: true,
                 artworkHeight: double.infinity,
-                id: int.parse(mediaItem!.id),
+                id: int.parse(mediaItem.id),
                 type: ArtworkType.AUDIO,
                 size: 10000,
                 artworkWidth: double.infinity,
@@ -110,13 +125,29 @@ class _PlayerPageState extends State<PlayerPage> {
               ),
               BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(0),
+                child: FutureBuilder<Color?>(
+                  future: sl<ArtworkPalette>().dominantColor(
+                    int.parse(mediaItem.id),
                   ),
+                  builder: (context, snapshot) {
+                    final Color accent = snapshot.data ?? Colors.black;
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            accent.withOpacity(0.55),
+                            Colors.black.withOpacity(0.75),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               Padding(
@@ -191,19 +222,18 @@ class _PlayerPageState extends State<PlayerPage> {
                               StreamBuilder<SequenceState?>(
                                 stream: player.sequenceState,
                                 builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
+                                  final MediaItem? mediaItem =
+                                      snapshot.data.currentMediaItem;
+
+                                  if (mediaItem == null) {
                                     return const SizedBox.shrink();
                                   }
-                                  final sequence = snapshot.data;
-
-                                  MediaItem? mediaItem = sequence!
-                                      .sequence[sequence.currentIndex].tag;
 
                                   return Column(
                                     children: [
                                       SizedBox(
                                         height: 30,
-                                        child: mediaItem!.title.length > 50
+                                        child: mediaItem.title.length > 50
                                             ? Marquee(
                                                 text: mediaItem.title,
                                                 blankSpace: 100,
@@ -244,7 +274,10 @@ class _PlayerPageState extends State<PlayerPage> {
                               ),
                               const Spacer(),
                               // seek bar
-                              SeekBar(player: player),
+                              WaveformSeekBar(
+                                player: player,
+                                seed: mediaItem.id,
+                              ),
                               const Spacer(),
                               // shuffle, previous, play/pause, next, repeat
                               Row(
@@ -323,20 +356,19 @@ class _PlayerPageState extends State<PlayerPage> {
                       StreamBuilder<SequenceState?>(
                         stream: player.sequenceState,
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
+                          final MediaItem? mediaItem =
+                              snapshot.data.currentMediaItem;
+
+                          if (mediaItem == null) {
                             return const SizedBox.shrink();
                           }
-                          final sequence = snapshot.data;
-
-                          MediaItem? mediaItem =
-                              sequence!.sequence[sequence.currentIndex].tag;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               SizedBox(
                                 height: 30,
-                                child: mediaItem!.title.length > 30
+                                child: mediaItem.title.length > 30
                                     ? Marquee(
                                         text: mediaItem.title,
                                         blankSpace: 100,
@@ -376,7 +408,10 @@ class _PlayerPageState extends State<PlayerPage> {
                       ),
                       const SizedBox(height: 64),
                       // seek bar
-                      SeekBar(player: player),
+                      WaveformSeekBar(
+                        player: player,
+                        seed: mediaItem.id,
+                      ),
                       const SizedBox(height: 16),
                       // shuffle, previous, play/pause, next, repeat
                       Row(
@@ -532,95 +567,189 @@ class _PlayerPageState extends State<PlayerPage> {
   }
 
   void showSleepTimer(BuildContext context) {
+    const List<Duration?> options = [
+      null,
+      Duration(minutes: 5),
+      Duration(minutes: 10),
+      Duration(minutes: 15),
+      Duration(minutes: 30),
+      Duration(minutes: 45),
+      Duration(hours: 1),
+    ];
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              ListTile(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
+        return GlassContainer(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                StreamBuilder<Duration?>(
+                  initialData: player.sleepTimerRemaining,
+                  stream: player.sleepTimerStream,
+                  builder: (context, snapshot) {
+                    final remaining = snapshot.data;
+
+                    return ListTile(
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(30),
+                          topRight: Radius.circular(30),
+                        ),
+                      ),
+                      title: Text(
+                        remaining == null
+                            ? 'No timer running'
+                            : 'Pausing in ${_formatRemaining(remaining)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    );
+                  },
                 ),
-                title: const Text('Off'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(PlayerSetSleepTimer(null));
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('5 minutes'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(
-                  //       PlayerSetSleepTimer(
-                  //         const Duration(minutes: 5),
-                  //       ),
-                  //     );
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('10 minutes'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(
-                  //       PlayerSetSleepTimer(
-                  //         const Duration(minutes: 10),
-                  //       ),
-                  //     );
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('15 minutes'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(
-                  //       PlayerSetSleepTimer(
-                  //         const Duration(minutes: 15),
-                  //       ),
-                  //     );
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('30 minutes'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(
-                  //       PlayerSetSleepTimer(
-                  //         const Duration(minutes: 30),
-                  //       ),
-                  //     );
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('45 minutes'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(
-                  //       PlayerSetSleepTimer(
-                  //         const Duration(minutes: 45),
-                  //       ),
-                  //     );
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('1 hour'),
-                onTap: () {
-                  // context.read<PlayerBloc>().add(
-                  //       PlayerSetSleepTimer(
-                  //         const Duration(hours: 1),
-                  //       ),
-                  //     );
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+                const Divider(height: 1),
+                for (final Duration? option in options)
+                  ListTile(
+                    title: Text(
+                      option == null ? 'Off' : _formatOption(option),
+                    ),
+                    onTap: () {
+                      context.read<PlayerBloc>().add(
+                            PlayerSetSleepTimer(option),
+                          );
+                      Navigator.of(context).pop();
+                    },
+                  ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  String _formatOption(Duration duration) {
+    if (duration.inMinutes >= 60) {
+      return '${duration.inHours} hour';
+    }
+
+    return '${duration.inMinutes} minutes';
+  }
+
+  String _formatRemaining(Duration duration) {
+    final String minutes =
+        duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final String seconds =
+        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+
+    if (duration.inHours > 0) {
+      return '${duration.inHours}:$minutes:$seconds';
+    }
+
+    return '$minutes:$seconds';
+  }
+
+  void showLyrics(BuildContext context) {
+    final MediaItem? mediaItem = sequence.currentMediaItem;
+
+    if (mediaItem == null) {
+      return;
+    }
+
+    final Iterable<SongModel> matches = player.playlist.where(
+      (song) => song.id.toString() == mediaItem.id,
+    );
+
+    if (matches.isEmpty) {
+      Fluttertoast.showToast(msg: 'Song not found in queue');
+      return;
+    }
+
+    LyricsSheet.show(context, matches.first);
+  }
+
+  void showSpeedAndPitch(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const GlassContainer(
+        child: SpeedAndPitchSheet(),
+      ),
+    );
+  }
+}
+
+class SpeedAndPitchSheet extends StatefulWidget {
+  const SpeedAndPitchSheet({super.key});
+
+  @override
+  State<SpeedAndPitchSheet> createState() => _SpeedAndPitchSheetState();
+}
+
+class _SpeedAndPitchSheetState extends State<SpeedAndPitchSheet> {
+  final player = sl<MusicPlayer>();
+
+  late double _speed = player.speed;
+  late double _pitch = player.pitch;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Speed: ${_speed.toStringAsFixed(2)}x',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Slider(
+              value: _speed,
+              min: 0.5,
+              max: 2.0,
+              divisions: 30,
+              label: '${_speed.toStringAsFixed(2)}x',
+              onChanged: (value) => setState(() => _speed = value),
+              onChangeEnd: (value) {
+                context.read<PlayerBloc>().add(PlayerSetSpeed(value));
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pitch: ${_pitch.toStringAsFixed(2)}x',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Slider(
+              value: _pitch,
+              min: 0.5,
+              max: 2.0,
+              divisions: 30,
+              label: '${_pitch.toStringAsFixed(2)}x',
+              onChanged: (value) => setState(() => _pitch = value),
+              onChangeEnd: (value) {
+                context.read<PlayerBloc>().add(PlayerSetPitch(value));
+              },
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _speed = 1.0;
+                    _pitch = 1.0;
+                  });
+                  context.read<PlayerBloc>().add(PlayerSetSpeed(1.0));
+                  context.read<PlayerBloc>().add(PlayerSetPitch(1.0));
+                },
+                child: const Text('Reset'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
