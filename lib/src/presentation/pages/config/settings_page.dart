@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/src/bloc/theme/theme_bloc.dart';
 import 'package:music/src/core/router/app_router.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  /// See [StatisticsPage.embedded].
+  final bool embedded;
+
+  const SettingsPage({super.key, this.embedded = false});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -39,22 +43,25 @@ class _SettingsPageState extends State<SettingsPage> {
     return BlocBuilder<ThemeBloc, ThemeState>(
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: Themes.getTheme().secondaryColor,
+          backgroundColor: widget.embedded
+              ? Colors.transparent
+              : Themes.getTheme().secondaryColor,
           appBar: AppBar(
-            backgroundColor: Themes.getTheme().primaryColor,
-            elevation: 0,
-            title: const Text(
+            titleSpacing: 24,
+            title: Text(
               'Settings',
+              style: widget.embedded
+                  ? Theme.of(context).textTheme.headlineSmall
+                  : null,
             ),
           ),
           body: Ink(
-            padding: const EdgeInsets.fromLTRB(
-              0,
-              16,
-              0,
-              16,
+            padding: EdgeInsets.only(
+              top: 8,
+              bottom: widget.embedded ? AppSpacing.bottomInset : 24,
             ),
-            decoration: Themes.getBackgroundDecoration(),
+            decoration:
+                widget.embedded ? null : Themes.getBackgroundDecoration(),
             child: ListView(
               children: [
                 // scan music (ignores songs which don't satisfy the requirements)

@@ -12,6 +12,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/src/core/constants/assets.dart';
 import 'package:music/src/core/router/app_router.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 
 class PlaylistsView extends StatefulWidget {
   const PlaylistsView({super.key});
@@ -152,6 +153,28 @@ class _PlaylistsViewState extends State<PlaylistsView>
             title: const Text('Import M3U'),
           ),
 
+          // smart playlists
+          ListTile(
+            onTap: () => Navigator.of(context).pushNamed(
+              AppRouter.smartPlaylistsRoute,
+            ),
+            leading: const Icon(Icons.auto_awesome_outlined),
+            title: const Text('Smart Playlists'),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+
+          // folders
+          ListTile(
+            onTap: () => Navigator.of(context).pushNamed(
+              AppRouter.foldersRoute,
+            ),
+            leading: const Icon(Icons.folder_outlined),
+            title: const Text('Folders'),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+
+          const Divider(indent: AppSpacing.lg, endIndent: AppSpacing.lg),
+
           // show playlists
           BlocListener<PlaylistsCubit, PlaylistsState>(
             listener: (context, state) {
@@ -169,7 +192,7 @@ class _PlaylistsViewState extends State<PlaylistsView>
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: playlists.length,
-                  padding: const EdgeInsets.only(bottom: 100),
+                  padding: const EdgeInsets.only(bottom: 140),
                   itemBuilder: (context, index) {
                     final playlist = playlists[index];
                     return ListTile(

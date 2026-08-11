@@ -160,9 +160,12 @@ class _SongsViewState extends State<SongsView>
                                 children: [
                                   Expanded(
                                     child: Container(
-                                      height: 40,
+                                      height: 44,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(32),
                                       ),
                                       child: InkWell(
@@ -205,9 +208,12 @@ class _SongsViewState extends State<SongsView>
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Container(
-                                      height: 40,
+                                      height: 44,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(32),
                                       ),
                                       child: InkWell(
@@ -278,7 +284,7 @@ class _SongsViewState extends State<SongsView>
                           ),
                           // bottom padding
                           const SliverToBoxAdapter(
-                            child: SizedBox(height: 100),
+                            child: SizedBox(height: 140),
                           ),
                         ],
                       ),

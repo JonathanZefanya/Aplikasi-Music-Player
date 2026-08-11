@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/home_repository.dart';
 import 'package:music/src/data/repositories/stats_repository.dart';
 
 class StatisticsPage extends StatefulWidget {
-  const StatisticsPage({super.key});
+  /// When hosted inside the navigation shell the gradient is already painted
+  /// by the shell, so this page must not paint it a second time.
+  final bool embedded;
+
+  const StatisticsPage({super.key, this.embedded = false});
 
   @override
   State<StatisticsPage> createState() => _StatisticsPageState();
@@ -26,13 +31,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:
+          widget.embedded ? Colors.transparent : Themes.getTheme().primaryColor,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
-        title: const Text('Statistics'),
+        titleSpacing: 24,
+        title: Text(
+          'Statistics',
+          style: widget.embedded
+              ? Theme.of(context).textTheme.headlineSmall
+              : null,
+        ),
       ),
       body: Ink(
-        decoration: Themes.getBackgroundDecoration(),
+        decoration:
+            widget.embedded ? null : Themes.getBackgroundDecoration(),
         child: FutureBuilder<List<SongModel>>(
           future: _songs,
           builder: (context, snapshot) {
@@ -50,7 +62,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
             final DateTime monthAgo = now.subtract(const Duration(days: 30));
 
             return ListView(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.only(
+                bottom: widget.embedded ? AppSpacing.bottomInset : 24,
+              ),
               children: [
                 _sectionTitle('Overview'),
                 _tile(
