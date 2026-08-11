@@ -66,7 +66,9 @@ class _QueuePageState extends State<QueuePage> {
             (sequence?.currentSource?.tag as MediaItem?)?.id;
 
         return ReorderableListView.builder(
-          padding: context.contentPadding.copyWith(bottom: 120),
+          padding: context.contentPadding.copyWith(
+            bottom: context.bottomBarInset,
+          ),
           itemCount: queue.length,
           onReorder: (oldIndex, newIndex) {
             final int target = newIndex > oldIndex ? newIndex - 1 : newIndex;

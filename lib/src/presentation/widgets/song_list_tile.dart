@@ -9,11 +9,13 @@ import 'package:music/src/core/helpers/helpers.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/bloc/player/player_bloc.dart';
 import 'package:music/src/core/constants/assets.dart';
 import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
+import 'package:music/src/data/services/media_scanner_service.dart';
 import 'package:music/src/presentation/pages/details/edit_metadata_page.dart';
 import 'package:music/src/presentation/widgets/add_to_playlist_sheet.dart';
 
@@ -311,7 +313,18 @@ class _SongListTileState extends State<SongListTile> {
                                   'File does not exist ${widget.song.title}');
                             }
 
-                            // TODO: Remove the song from the list
+                            // MediaStore still lists the deleted file until
+                            // the path is re-scanned.
+                            await sl<MediaScannerService>().scan(
+                              [widget.song.data],
+                            );
+
+                            if (pageContext.mounted) {
+                              pageContext
+                                  .read<HomeBloc>()
+                                  .add(GetSongsEvent());
+                            }
+
                             if (context.mounted) {
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();

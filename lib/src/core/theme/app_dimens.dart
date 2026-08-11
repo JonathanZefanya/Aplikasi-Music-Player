@@ -11,10 +11,8 @@ class AppSpacing {
 
   static const EdgeInsets pageHorizontal = EdgeInsets.symmetric(horizontal: lg);
 
-  /// Clears the mini player plus the floating navigation bar and its safe-area
-  /// margin. Overshooting only leaves blank space; undershooting hides content.
-  static const double bottomInset = 190;
-  static const EdgeInsets listBottom = EdgeInsets.only(bottom: bottomInset);
+  // Scrollables use `context.bottomBarInset` instead of a fixed number, so the
+  // gap tracks the mini player and navigation bar as they appear and disappear.
 }
 
 class AppRadius {

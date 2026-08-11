@@ -21,6 +21,7 @@ import 'package:music/src/data/repositories/stats_repository.dart';
 import 'package:music/src/data/repositories/theme_repository.dart';
 import 'package:music/src/data/services/artwork_palette.dart';
 import 'package:music/src/data/services/audio_effects_service.dart';
+import 'package:music/src/data/services/media_scanner_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 final sl = GetIt.instance;
@@ -51,6 +52,7 @@ void init() {
   sl.registerLazySingleton(() => StatsRepository());
   sl.registerLazySingleton(() => ArtworkPalette());
   sl.registerLazySingleton(() => AudioEffectsService());
+  sl.registerLazySingleton(() => MediaScannerService());
   sl.registerLazySingleton(() => BackupRepository());
   sl.registerLazySingleton(() => MetadataRepository());
   sl.registerLazySingleton(() => M3uRepository());

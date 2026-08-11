@@ -5,6 +5,7 @@ import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/core/theme/app_dimens.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class GenresView extends StatefulWidget {
@@ -48,7 +49,7 @@ class _GenresViewState extends State<GenresView>
             )
           : AnimationLimiter(
               child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: AppSpacing.bottomInset),
+                padding: EdgeInsets.only(bottom: context.bottomBarInset),
                 itemCount: genres.length,
                 itemBuilder: (context, index) {
                   final genre = genres[index];

@@ -14,6 +14,7 @@ import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/presentation/widgets/player_bottom_app_bar.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/src/core/theme/themes.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 
 class PlaylistDetailsPage extends StatefulWidget {
   final PlaylistModel playlist;
@@ -64,7 +65,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
                   child: Text('No songs added to this playlist'),
                 )
               : ReorderableListView.builder(
-                  padding: const EdgeInsets.only(bottom: 100),
+                  padding: EdgeInsets.only(bottom: context.bottomBarInset),
                   itemCount: _songs.length,
                   onReorder: (oldIndex, newIndex) {
                     final int target =

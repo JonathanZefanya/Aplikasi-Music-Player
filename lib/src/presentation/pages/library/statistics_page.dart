@@ -6,6 +6,7 @@ import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/home_repository.dart';
 import 'package:music/src/data/repositories/stats_repository.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 
 class StatisticsPage extends StatefulWidget {
   /// When hosted inside the navigation shell the gradient is already painted
@@ -34,7 +35,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       backgroundColor:
           widget.embedded ? Colors.transparent : Themes.getTheme().primaryColor,
       appBar: AppBar(
-        titleSpacing: 24,
+        titleSpacing: AppSpacing.xl,
         title: Text(
           'Statistics',
           style: widget.embedded
@@ -62,9 +63,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
             final DateTime monthAgo = now.subtract(const Duration(days: 30));
 
             return ListView(
-              padding: EdgeInsets.only(
-                bottom: widget.embedded ? AppSpacing.bottomInset : 24,
-              ),
+              padding: EdgeInsets.only(bottom: context.bottomBarInset)
+                  .add(context.contentPadding),
               children: [
                 _sectionTitle('Overview'),
                 _tile(

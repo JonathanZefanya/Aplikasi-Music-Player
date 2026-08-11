@@ -12,6 +12,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/src/bloc/player/player_bloc.dart';
 import 'package:music/src/bloc/song/song_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/repositories/song_repository.dart';
 import 'package:music/src/data/services/artwork_palette.dart';
@@ -65,33 +66,12 @@ class _PlayerPageState extends State<PlayerPage> {
         ),
         actions: [
           // more button
-          PopupMenuButton(
-            icon: const Icon(
-              Icons.more_vert_outlined,
-            ),
-            itemBuilder: (context) {
-              return [
-                PopupMenuItem(
-                  onTap: () {
-                    showSleepTimer(context);
-                  },
-                  child: const Text('Sleep timer'),
-                ),
-                PopupMenuItem(
-                  onTap: () {
-                    showSpeedAndPitch(context);
-                  },
-                  child: const Text('Speed & pitch'),
-                ),
-                PopupMenuItem(
-                  onTap: () {
-                    showLyrics(context);
-                  },
-                  child: const Text('Lyrics'),
-                ),
-              ];
-            },
+          IconButton(
+            onPressed: () => showPlayerMenu(context),
+            icon: const Icon(Icons.more_vert_outlined),
+            tooltip: 'More',
           ),
+          const SizedBox(width: AppSpacing.sm),
         ],
       ),
       extendBodyBehindAppBar: true,
@@ -561,6 +541,102 @@ class _PlayerPageState extends State<PlayerPage> {
           tooltip: 'Repeat',
         );
       },
+    );
+  }
+
+  void showPlayerMenu(BuildContext context) {
+    // The sheet's own context dies on pop, so keep the page context for
+    // whatever sheet gets opened next.
+    final BuildContext pageContext = context;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return GlassContainer(
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                StreamBuilder<Duration?>(
+                  initialData: player.sleepTimerRemaining,
+                  stream: player.sleepTimerStream,
+                  builder: (context, snapshot) {
+                    final Duration? remaining = snapshot.data;
+
+                    return _menuTile(
+                      context,
+                      icon: Icons.bedtime_outlined,
+                      label: 'Sleep timer',
+                      value: remaining == null
+                          ? 'Off'
+                          : _formatRemaining(remaining),
+                      highlighted: remaining != null,
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        showSleepTimer(pageContext);
+                      },
+                    );
+                  },
+                ),
+                _menuTile(
+                  context,
+                  icon: Icons.speed_outlined,
+                  label: 'Speed & pitch',
+                  value: '${player.speed.toStringAsFixed(2)}x'
+                      ' · ${player.pitch.toStringAsFixed(2)}x',
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    showSpeedAndPitch(pageContext);
+                  },
+                ),
+                _menuTile(
+                  context,
+                  icon: Icons.lyrics_outlined,
+                  label: 'Lyrics',
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    showLyrics(pageContext);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _menuTile(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    String? value,
+    bool highlighted = false,
+  }) {
+    final Color accent = Theme.of(context).colorScheme.onSurface;
+
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: accent.withOpacity(highlighted ? 0.20 : 0.10),
+        ),
+        child: Icon(icon, size: 20),
+      ),
+      title: Text(label),
+      trailing: value == null
+          ? const Icon(Icons.chevron_right)
+          : Text(
+              value,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
     );
   }
 

@@ -275,7 +275,7 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                         ],
                       ),
-                    const SizedBox(height: 120),
+                    SizedBox(height: context.bottomBarInset),
                   ],
                 ),
               ),

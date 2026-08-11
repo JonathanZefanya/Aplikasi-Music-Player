@@ -26,6 +26,11 @@ class MainActivity : AudioServiceActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
+            MediaScannerHandler.CHANNEL
+        ).setMethodCallHandler(MediaScannerHandler(applicationContext))
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
             WIDGET_CHANNEL
         ).setMethodCallHandler { call, result ->
             if (call.method == "update") {

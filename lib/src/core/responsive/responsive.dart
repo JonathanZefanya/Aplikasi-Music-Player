@@ -40,6 +40,14 @@ extension ResponsiveContext on BuildContext {
     }
   }
 
+  /// Bottom padding a scrollable needs so its last item clears whatever the
+  /// Scaffold stacks below it.
+  ///
+  /// With `extendBody: true` the Scaffold reports the combined height of the
+  /// mini player plus navigation bar through MediaQuery padding, so this
+  /// shrinks automatically when nothing is playing and the mini player is gone.
+  double get bottomBarInset => MediaQuery.paddingOf(this).bottom + 16;
+
   /// Horizontal padding that centres a full-width scrollable inside
   /// [contentMaxWidth]. Useful where wrapping in [ContentWidth] would mean
   /// restructuring an existing widget tree.

@@ -13,6 +13,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/src/core/constants/assets.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/core/theme/app_dimens.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 
 class PlaylistsView extends StatefulWidget {
   const PlaylistsView({super.key});
@@ -193,7 +194,7 @@ class _PlaylistsViewState extends State<PlaylistsView>
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: playlists.length,
                   padding:
-                      const EdgeInsets.only(bottom: AppSpacing.bottomInset),
+                      EdgeInsets.only(bottom: context.bottomBarInset),
                   itemBuilder: (context, index) {
                     final playlist = playlists[index];
                     return ListTile(

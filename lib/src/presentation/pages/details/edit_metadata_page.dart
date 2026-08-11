@@ -13,6 +13,8 @@ import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/metadata_repository.dart';
+import 'package:music/src/data/services/artwork_palette.dart';
+import 'package:music/src/data/services/media_scanner_service.dart';
 
 class EditMetadataPage extends StatefulWidget {
   final SongModel song;
@@ -311,8 +313,20 @@ class _EditMetadataPageState extends State<EditMetadataPage> {
         await _repository.writeArtwork(widget.song.data, _artwork!);
       }
 
+      // The library reads from MediaStore, not from the file, so it keeps
+      // showing the old tags until Android re-indexes this path.
+      final bool scanned = await sl<MediaScannerService>().scan(
+        [widget.song.data],
+      );
+
+      sl<ArtworkPalette>().invalidate(widget.song.id);
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
       Fluttertoast.showToast(
-        msg: 'Saved. Refresh the library to see the change',
+        msg: scanned
+            ? 'Saved'
+            : 'Saved, but the library may need a manual refresh',
       );
 
       if (mounted) {

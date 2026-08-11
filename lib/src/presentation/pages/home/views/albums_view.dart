@@ -5,6 +5,7 @@ import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/core/di/service_locator.dart';
 import 'package:music/src/core/theme/app_dimens.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class AlbumsView extends StatefulWidget {
@@ -47,8 +48,8 @@ class _AlbumsViewState extends State<AlbumsView>
             )
           : AnimationLimiter(
               child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(
-                    16, 16, 16, AppSpacing.bottomInset),
+                padding: EdgeInsets.fromLTRB(
+                    16, 16, 16, context.bottomBarInset),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 220,
                   crossAxisSpacing: 16,

@@ -10,6 +10,11 @@ class ArtworkPalette {
   final OnAudioQuery _audioQuery = sl<OnAudioQuery>();
   final Map<int, Color?> _cache = {};
 
+  /// Drops the cached colour so edited artwork is re-read.
+  void invalidate(int songId) {
+    _cache.remove(songId);
+  }
+
   Future<Color?> dominantColor(int songId) async {
     if (_cache.containsKey(songId)) {
       return _cache[songId];

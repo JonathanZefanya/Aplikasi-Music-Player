@@ -18,6 +18,7 @@ import 'package:music/src/presentation/widgets/add_to_playlist_sheet.dart';
 import 'package:music/src/presentation/widgets/alphabet_index_bar.dart';
 import 'package:music/src/presentation/widgets/song_list_tile.dart';
 import 'package:music/src/core/theme/app_dimens.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 
 class SongsView extends StatefulWidget {
   const SongsView({super.key});
@@ -292,8 +293,8 @@ class _SongsViewState extends State<SongsView>
                             ),
                           ),
                           // bottom padding
-                          const SliverToBoxAdapter(
-                            child: SizedBox(height: AppSpacing.bottomInset),
+                          SliverToBoxAdapter(
+                            child: SizedBox(height: context.bottomBarInset),
                           ),
                         ],
                       ),

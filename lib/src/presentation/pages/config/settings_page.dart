@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/src/bloc/theme/theme_bloc.dart';
 import 'package:music/src/core/router/app_router.dart';
+import 'package:music/src/core/responsive/responsive.dart';
 import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -47,7 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ? Colors.transparent
               : Themes.getTheme().secondaryColor,
           appBar: AppBar(
-            titleSpacing: 24,
+            titleSpacing: AppSpacing.xl,
             title: Text(
               'Settings',
               style: widget.embedded
@@ -56,13 +57,15 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           body: Ink(
-            padding: EdgeInsets.only(
-              top: 8,
-              bottom: widget.embedded ? AppSpacing.bottomInset : 24,
-            ),
             decoration:
                 widget.embedded ? null : Themes.getBackgroundDecoration(),
             child: ListView(
+              // Must sit on the ListView, not the Ink: padding on the wrapper
+              // shrinks the scroll viewport instead of adding scrollable room.
+              padding: EdgeInsets.only(
+                top: 8,
+                bottom: context.bottomBarInset,
+              ).add(context.contentPadding),
               children: [
                 // scan music (ignores songs which don't satisfy the requirements)
                 ListTile(
