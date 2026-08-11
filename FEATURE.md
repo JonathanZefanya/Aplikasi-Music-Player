@@ -89,5 +89,3 @@
 - [x] Favorite Albums
 - [x] Weekly Statistics
 - [x] Monthly Statistics
-
-Next: Lanjutkan Import/Export M3U, Edit & Download Album Artwork, Crossfade, Volume Normalization,  Android Integration 0/8 dan equalizer beserta efek audio lain

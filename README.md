@@ -1,48 +1,70 @@
-# Music
+# 🎵 Music Player
 
-Music is a local music player app that plays music from your device built with Flutter.
+A modern local music player built with **Flutter** that allows you to play and manage music stored on your Android device.
 
-## Platforms
+## ✨ Features
+
+See the complete feature list in [FEATURE.md](FEATURE.md).
+
+## 📱 Platform
 
 - Android
 
-## Features
-Look At [FEATURE.md](FEATURE.md)
+## 📸 Preview
 
-## Installation
+| Home | Player | Playlist | Settings |
+|------|---------|----------|----------|
+| <img src="assets/docs/gambar/home.png" width="200"> | <img src="assets/docs/gambar/player.png" width="200"> | <img src="assets/docs/gambar/playlist.png" width="200"> | <img src="assets/docs/gambar/settings.png" width="200"> |
+
+| Albums | Artists | Genres | Metadata |
+|---------|----------|--------|----------|
+| <img src="assets/docs/gambar/album.png" width="200"> | <img src="assets/docs/gambar/artist.png" width="200"> | <img src="assets/docs/gambar/genres.png" width="200"> | <img src="assets/docs/gambar/metadata.png" width="200"> |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Flutter ersion 3.41.5
-- Visual Studio Code / Android Studio 
-- Emulator Android 14
+Before running the project, make sure you have:
 
-### Setup
+- Flutter **3.41.5**
+- Android Studio or Visual Studio Code
+- Android Emulator (Android 11 recommended) or a physical Android device
 
-1. Clone the repo
+### Installation
 
-   ```sh
-   git clone https://github.com/JonathanZefanya/Aplikasi-Music-Player
-   ```
+1. Clone this repository
 
-2. Install dependencies
+```bash
+git clone https://github.com/JonathanZefanya/Aplikasi-Music-Player.git
+```
 
-   ```sh
-   flutter pub get
-   ```
+2. Navigate to the project
 
-3. Run the app
+```bash
+cd Aplikasi-Music-Player
+```
 
-   ```sh
-   flutter run
-   ```
+3. Install dependencies
 
-## Permissions
+```bash
+flutter pub get
+```
 
-### Android
+4. Run the application
+
+```bash
+flutter run
+```
+
+---
+
+## 🔐 Android Permissions
+
+The application requires the following permissions:
 
 ```xml
-
 <!-- url_launcher -->
 <queries>
     <intent>
@@ -51,20 +73,31 @@ Look At [FEATURE.md](FEATURE.md)
     </intent>
 </queries>
 
-<!-- !DANGER! Delete, update songs/playlists -->
+<!-- Required for deleting/updating songs & playlists -->
 <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
-<!-- Android 12 or below  -->
+<!-- Android 10 and below -->
 <uses-permission
     android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-    android:maxSdkVersion="29"
-/>
+    android:maxSdkVersion="29" />
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-<!-- Android 13 or greater  -->
+<!-- Android 13+ -->
 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-<!-- Audio service -->
+<!-- Background audio playback -->
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 ```
+
+---
+
+## 🛠 Built With
+
+- Flutter       //Framework
+- Hive          //Local Database
+- flutter_bloc  //State Management
+
+## 📄 License
+
+ComingSoon - Feel Free To Use
