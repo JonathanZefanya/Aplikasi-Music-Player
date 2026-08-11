@@ -8,6 +8,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/bloc/theme/theme_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/backup_repository.dart';
 
@@ -33,13 +35,13 @@ class _BackupPageState extends State<BackupPage> {
     return Scaffold(
       backgroundColor: Themes.getTheme().secondaryColor,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Backup & Restore'),
       ),
       body: Ink(
         decoration: Themes.getBackgroundDecoration(),
         child: ListView(
+          padding: context.contentPadding,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),

@@ -6,6 +6,8 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/src/bloc/player/player_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 
@@ -24,8 +26,7 @@ class _QueuePageState extends State<QueuePage> {
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Queue'),
         actions: [
           IconButton(
@@ -65,7 +66,7 @@ class _QueuePageState extends State<QueuePage> {
             (sequence?.currentSource?.tag as MediaItem?)?.id;
 
         return ReorderableListView.builder(
-          padding: const EdgeInsets.only(bottom: 100),
+          padding: context.contentPadding.copyWith(bottom: 120),
           itemCount: queue.length,
           onReorder: (oldIndex, newIndex) {
             final int target = newIndex > oldIndex ? newIndex - 1 : newIndex;

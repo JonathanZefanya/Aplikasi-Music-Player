@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class GenresView extends StatefulWidget {
@@ -47,7 +48,7 @@ class _GenresViewState extends State<GenresView>
             )
           : AnimationLimiter(
               child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 140),
+                padding: const EdgeInsets.only(bottom: AppSpacing.bottomInset),
                 itemCount: genres.length,
                 itemBuilder: (context, index) {
                   final genre = genres[index];

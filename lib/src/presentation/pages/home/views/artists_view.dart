@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/router/app_router.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class ArtistsView extends StatefulWidget {
@@ -46,9 +47,9 @@ class _ArtistsViewState extends State<ArtistsView>
             )
           : AnimationLimiter(
               child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
-                gridDelegate:
-                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                padding: const EdgeInsets.fromLTRB(
+                    16, 16, 16, AppSpacing.bottomInset),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 220,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,

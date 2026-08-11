@@ -6,6 +6,8 @@ import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/bloc/scan/scan_cubit.dart';
 import 'package:music/src/core/constants/assets.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/services/hive_box.dart';
 
@@ -44,75 +46,75 @@ class _ScanPageState extends State<ScanPage> {
     return Scaffold(
       backgroundColor: Themes.getTheme().secondaryColor,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
-        title: const Text(
-          'Scan',
-        ),
+        titleSpacing: AppSpacing.xl,
+        title: const Text('Scan'),
       ),
       body: Ink(
         decoration: Themes.getBackgroundDecoration(),
-        child: ListView(
-          children: [
-            // scanning animation
-            Lottie.asset(
-              Assets.scanningAnimation,
-              width: 200,
-              height: 200,
-            ),
-            const SizedBox(height: 16),
-            // ignore duration less than value
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                'Ignore duration less than:',
-                style: Theme.of(context).textTheme.titleMedium,
+        child: ContentWidth(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+            children: [
+              // scanning animation
+              Lottie.asset(
+                Assets.scanningAnimation,
+                width: 200,
+                height: 200,
               ),
-            ),
-            for (int i = 0; i < durationGroupValue.length; i++)
-              RadioListTile(
-                title: Text(
-                  '${durationGroupValue[i]} ${'second'.pluralize(durationGroupValue[i])}',
+              const SizedBox(height: 16),
+              // ignore duration less than value
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Ignore duration less than:',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                value: durationGroupValue[i],
-                groupValue: durationValue,
-                onChanged: (value) {
-                  setState(() {
-                    durationValue = value as int;
-                  });
-                  context
-                      .read<ScanCubit>()
-                      .setDuration(durationValue)
-                      .then((_) => _refreshLibrary());
-                },
               ),
-            const SizedBox(height: 16),
-            // ignore size less than value
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                'Ignore size less than:',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            for (int i = 0; i < sizeGroupValue.length; i++)
-              RadioListTile(
-                title: Text(
-                  '${sizeGroupValue[i]} ${'KB'.pluralize(sizeGroupValue[i])}',
+              for (int i = 0; i < durationGroupValue.length; i++)
+                RadioListTile(
+                  title: Text(
+                    '${durationGroupValue[i]} ${'second'.pluralize(durationGroupValue[i])}',
+                  ),
+                  value: durationGroupValue[i],
+                  groupValue: durationValue,
+                  onChanged: (value) {
+                    setState(() {
+                      durationValue = value as int;
+                    });
+                    context
+                        .read<ScanCubit>()
+                        .setDuration(durationValue)
+                        .then((_) => _refreshLibrary());
+                  },
                 ),
-                value: sizeGroupValue[i],
-                groupValue: sizeValue,
-                onChanged: (value) {
-                  setState(() {
-                    sizeValue = value as int;
-                  });
-                  context
-                      .read<ScanCubit>()
-                      .setSize(sizeValue)
-                      .then((_) => _refreshLibrary());
-                },
+              const SizedBox(height: 16),
+              // ignore size less than value
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Size kurang dari:',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-          ],
+              for (int i = 0; i < sizeGroupValue.length; i++)
+                RadioListTile(
+                  title: Text(
+                    '${sizeGroupValue[i]} ${'KB'.pluralize(sizeGroupValue[i])}',
+                  ),
+                  value: sizeGroupValue[i],
+                  groupValue: sizeValue,
+                  onChanged: (value) {
+                    setState(() {
+                      sizeValue = value as int;
+                    });
+                    context
+                        .read<ScanCubit>()
+                        .setSize(sizeValue)
+                        .then((_) => _refreshLibrary());
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );

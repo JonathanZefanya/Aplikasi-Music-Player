@@ -6,6 +6,8 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/home_repository.dart';
 import 'package:music/src/data/services/hive_box.dart';
@@ -33,13 +35,13 @@ class _LibraryPageState extends State<LibraryPage> {
     return Scaffold(
       backgroundColor: Themes.getTheme().secondaryColor,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Library'),
       ),
       body: Ink(
         decoration: Themes.getBackgroundDecoration(),
         child: ListView(
+          padding: context.contentPadding,
           children: [
             SwitchListTile(
               secondary: const FaIcon(

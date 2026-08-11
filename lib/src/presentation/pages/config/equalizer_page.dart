@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 import 'package:music/src/data/services/audio_effects_service.dart';
@@ -27,8 +29,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
     return Scaffold(
       backgroundColor: Themes.getTheme().secondaryColor,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Equalizer'),
       ),
       body: Ink(
@@ -44,6 +45,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
                 ),
               )
             : ListView(
+                padding: context.contentPadding,
                 children: [
                   StreamBuilder<bool>(
                     initialData: _player.equalizer.enabled,

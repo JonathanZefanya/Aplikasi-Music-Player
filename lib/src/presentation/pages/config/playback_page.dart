@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/services/hive_box.dart';
 
@@ -25,13 +27,13 @@ class _PlaybackPageState extends State<PlaybackPage> {
     return Scaffold(
       backgroundColor: Themes.getTheme().secondaryColor,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Playback'),
       ),
       body: Ink(
         decoration: Themes.getBackgroundDecoration(),
         child: ListView(
+          padding: context.contentPadding,
           children: [
             SwitchListTile(
               secondary: const Icon(Icons.graphic_eq_outlined),

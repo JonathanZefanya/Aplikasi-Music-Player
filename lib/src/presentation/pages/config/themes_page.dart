@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:music/src/bloc/theme/theme_bloc.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 
 class ThemesPage extends StatefulWidget {
@@ -25,16 +27,20 @@ class _ThemesPageState extends State<ThemesPage> {
         return Scaffold(
           backgroundColor: Themes.getTheme().secondaryColor,
           appBar: AppBar(
-            backgroundColor: Themes.getTheme().primaryColor,
-            elevation: 0,
+            titleSpacing: AppSpacing.xl,
             title: const Text('Themes'),
           ),
           body: Ink(
-            padding: const EdgeInsets.fromLTRB(32, 16, 32, 16),
             decoration: Themes.getBackgroundDecoration(),
             child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.xl,
+                AppSpacing.xxl,
+              ).add(context.contentPadding),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 140,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),

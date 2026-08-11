@@ -4,10 +4,12 @@ import 'package:just_audio/just_audio.dart';
 
 import 'package:music/src/bloc/recents/recents_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
+import 'package:music/src/presentation/pages/library/song_list_page.dart';
 import 'package:music/src/presentation/widgets/player_bottom_app_bar.dart';
-import 'package:music/src/presentation/widgets/song_list_tile.dart';
 
 class RecentsPage extends StatefulWidget {
   const RecentsPage({super.key});
@@ -33,8 +35,7 @@ class _RecentsPageState extends State<RecentsPage> {
       bottomNavigationBar: const PlayerBottomAppBar(),
       extendBody: true,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Recents'),
       ),
       body: Ink(
@@ -66,19 +67,12 @@ class _RecentsPageState extends State<RecentsPage> {
 
   Widget _buildBody(RecentsLoaded state) {
     if (state.songs.isEmpty) {
-      return const Center(
-        child: Text('No songs found'),
+      return const EmptyState(
+        icon: Icons.history_outlined,
+        message: 'Nothing played yet.\nSongs you play will show up here.',
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 100),
-      itemCount: state.songs.length,
-      itemBuilder: (context, index) {
-        return SongListTile(
-          song: state.songs[index],
-          songs: state.songs,
-        );
-      },
-    );
+
+    return ContentWidth(child: SongListBody(songs: state.songs));
   }
 }

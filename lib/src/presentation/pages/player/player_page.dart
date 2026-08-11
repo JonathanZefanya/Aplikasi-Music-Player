@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -304,10 +305,13 @@ class _PlayerPageState extends State<PlayerPage> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // artwork
+                      // artwork, capped by height so short screens still fit
                       SizedBox(
                         width: double.infinity,
-                        height: MediaQuery.of(context).size.width - 64,
+                        height: min(
+                          constraints.maxWidth - 64,
+                          constraints.maxHeight * 0.5,
+                        ),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [

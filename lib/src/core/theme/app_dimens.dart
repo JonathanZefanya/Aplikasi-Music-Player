@@ -11,8 +11,9 @@ class AppSpacing {
 
   static const EdgeInsets pageHorizontal = EdgeInsets.symmetric(horizontal: lg);
 
-  /// Clears the mini player plus the bottom navigation bar.
-  static const double bottomInset = 140;
+  /// Clears the mini player plus the floating navigation bar and its safe-area
+  /// margin. Overshooting only leaves blank space; undershooting hides content.
+  static const double bottomInset = 190;
   static const EdgeInsets listBottom = EdgeInsets.only(bottom: bottomInset);
 }
 

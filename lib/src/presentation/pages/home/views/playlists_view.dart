@@ -192,7 +192,8 @@ class _PlaylistsViewState extends State<PlaylistsView>
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: playlists.length,
-                  padding: const EdgeInsets.only(bottom: 140),
+                  padding:
+                      const EdgeInsets.only(bottom: AppSpacing.bottomInset),
                   itemBuilder: (context, index) {
                     final playlist = playlists[index];
                     return ListTile(

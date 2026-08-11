@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:music/src/bloc/favorites/favorites_bloc.dart';
 import 'package:music/src/bloc/song/song_bloc.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
+import 'package:music/src/presentation/pages/library/song_list_page.dart';
 import 'package:music/src/presentation/widgets/player_bottom_app_bar.dart';
-import 'package:music/src/presentation/widgets/song_list_tile.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -29,8 +31,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
       bottomNavigationBar: const PlayerBottomAppBar(),
       extendBody: true,
       appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        elevation: 0,
+        titleSpacing: AppSpacing.xl,
         title: const Text('Favorites'),
       ),
       body: Ink(
@@ -65,19 +66,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   Widget _buildBody(state) {
     if (state.favoriteSongs.isEmpty) {
-      return const Center(
-        child: Text('No favorites yet'),
+      return const EmptyState(
+        icon: Icons.favorite_border,
+        message: 'No favorites yet.\nTap the heart on a song to add it here.',
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 100),
-      itemCount: state.favoriteSongs.length,
-      itemBuilder: (context, index) {
-        return SongListTile(
-          song: state.favoriteSongs[index],
-          songs: state.favoriteSongs,
-        );
-      },
+
+    return ContentWidth(
+      child: SongListBody(songs: state.favoriteSongs),
     );
   }
 }

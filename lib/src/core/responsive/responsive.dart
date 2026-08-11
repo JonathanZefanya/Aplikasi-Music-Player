@@ -39,6 +39,24 @@ extension ResponsiveContext on BuildContext {
         return 1100;
     }
   }
+
+  /// Horizontal padding that centres a full-width scrollable inside
+  /// [contentMaxWidth]. Useful where wrapping in [ContentWidth] would mean
+  /// restructuring an existing widget tree.
+  EdgeInsets get contentPadding {
+    final double maxWidth = contentMaxWidth;
+
+    if (!maxWidth.isFinite) {
+      return EdgeInsets.zero;
+    }
+
+    final double inset = ((screenWidth - maxWidth) / 2).clamp(
+      0.0,
+      double.infinity,
+    );
+
+    return EdgeInsets.symmetric(horizontal: inset);
+  }
 }
 
 /// Centers and caps the width of a page body on large screens.

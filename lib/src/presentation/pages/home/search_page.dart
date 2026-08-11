@@ -4,7 +4,10 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/src/bloc/search/search_bloc.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 import 'package:music/src/core/theme/themes.dart';
+import 'package:music/src/core/responsive/responsive.dart';
+import 'package:music/src/presentation/pages/library/song_list_page.dart';
 import 'package:music/src/presentation/widgets/song_list_tile.dart';
 
 class SearchPage extends StatefulWidget {
@@ -28,27 +31,35 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: Themes.getTheme().secondaryColor,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Themes.getTheme().primaryColor,
-        title: TextField(
-          onChanged: (value) {
-            context.read<SearchBloc>().add(SearchQueryChanged(value));
-          },
-          controller: searchController,
-          decoration: InputDecoration(
-            hintText: 'Search',
-            border: InputBorder.none,
-            suffixIcon: searchController.text.isEmpty
-                ? null
-                : IconButton(
-                    onPressed: () {
-                      searchController.clear();
-                      context.read<SearchBloc>().add(SearchQueryChanged(''));
-                      setState(() {});
-                    },
-                    icon: const Icon(Icons.clear),
-                    tooltip: 'Clear',
-                  ),
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.lg),
+          child: TextField(
+            onChanged: (value) {
+              context.read<SearchBloc>().add(SearchQueryChanged(value));
+            },
+            controller: searchController,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Search songs, albums, artists',
+              isDense: true,
+              prefixIcon: const Icon(Icons.search, size: 20),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: AppSpacing.md,
+              ),
+              suffixIcon: searchController.text.isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: () {
+                        searchController.clear();
+                        context.read<SearchBloc>().add(SearchQueryChanged(''));
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.clear),
+                      tooltip: 'Clear',
+                    ),
+            ),
           ),
         ),
       ),
@@ -57,7 +68,10 @@ class _SearchPageState extends State<SearchPage> {
         child: BlocBuilder<SearchBloc, SearchState>(
           builder: (context, state) {
             if (searchController.text.isEmpty) {
-              return const SizedBox.shrink();
+              return const EmptyState(
+                icon: Icons.search,
+                message: 'Type to search your library.',
+              );
             }
 
             if (state is SearchError) {
@@ -76,192 +90,194 @@ class _SearchPageState extends State<SearchPage> {
               return const SizedBox.shrink();
             }
 
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (state.searchResult.songs.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Songs',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+            return ContentWidth(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    if (state.searchResult.songs.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Songs',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${state.searchResult.songs.length} ${'result'.pluralize(state.searchResult.songs.length)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                                Text(
+                                  '${state.searchResult.songs.length} ${'result'.pluralize(state.searchResult.songs.length)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        for (final song in state.searchResult.songs)
-                          SongListTile(
-                            song: song,
-                            songs: state.searchResult.songs,
-                          ),
-                      ],
-                    ),
-                  if (state.searchResult.albums.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Albums',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                '${state.searchResult.albums.length} ${'result'.pluralize(state.searchResult.albums.length)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        for (final album in state.searchResult.albums)
-                          ListTile(
-                            leading: QueryArtworkWidget(
-                              id: album.id,
-                              type: ArtworkType.ALBUM,
-                              nullArtworkWidget: const Icon(Icons.album),
+                              ],
                             ),
-                            title: Text(album.album),
-                            subtitle: Text(album.artist ?? 'Unknown'),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/album',
-                                arguments: album,
-                              );
-                            },
                           ),
-                      ],
-                    ),
-                  if (state.searchResult.artists.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Artists',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                '${state.searchResult.artists.length} ${'result'.pluralize(state.searchResult.artists.length)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        for (final artist in state.searchResult.artists)
-                          ListTile(
-                            leading: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: Colors.grey.withOpacity(0.1),
-                              ),
-                              child: const Icon(
-                                Icons.person_outlined,
-                              ),
+                          for (final song in state.searchResult.songs)
+                            SongListTile(
+                              song: song,
+                              songs: state.searchResult.songs,
                             ),
-                            title: Text(artist.artist),
-                            subtitle: Text(
-                              '${artist.numberOfTracks} ${'song'.pluralize(artist.numberOfTracks ?? 0)}',
+                        ],
+                      ),
+                    if (state.searchResult.albums.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Albums',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${state.searchResult.albums.length} ${'result'.pluralize(state.searchResult.albums.length)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/artist',
-                                arguments: artist,
-                              );
-                            },
                           ),
-                      ],
-                    ),
-                  if (state.searchResult.genres.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Genres',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                          for (final album in state.searchResult.albums)
+                            ListTile(
+                              leading: QueryArtworkWidget(
+                                id: album.id,
+                                type: ArtworkType.ALBUM,
+                                nullArtworkWidget: const Icon(Icons.album),
+                              ),
+                              title: Text(album.album),
+                              subtitle: Text(album.artist ?? 'Unknown'),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/album',
+                                  arguments: album,
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    if (state.searchResult.artists.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Artists',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${state.searchResult.artists.length} ${'result'.pluralize(state.searchResult.artists.length)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          for (final artist in state.searchResult.artists)
+                            ListTile(
+                              leading: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  color: Colors.grey.withOpacity(0.1),
+                                ),
+                                child: const Icon(
+                                  Icons.person_outlined,
                                 ),
                               ),
-                              Text(
-                                '${state.searchResult.genres.length} ${'result'.pluralize(state.searchResult.genres.length)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                              title: Text(artist.artist),
+                              subtitle: Text(
+                                '${artist.numberOfTracks} ${'song'.pluralize(artist.numberOfTracks ?? 0)}',
+                              ),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/artist',
+                                  arguments: artist,
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    if (state.searchResult.genres.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Genres',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${state.searchResult.genres.length} ${'result'.pluralize(state.searchResult.genres.length)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          for (final genre in state.searchResult.genres)
+                            ListTile(
+                              leading: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  color: Colors.grey.withOpacity(0.1),
+                                ),
+                                child: const Icon(
+                                  Icons.library_music_outlined,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        for (final genre in state.searchResult.genres)
-                          ListTile(
-                            leading: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: Colors.grey.withOpacity(0.1),
-                              ),
-                              child: const Icon(
-                                Icons.library_music_outlined,
-                              ),
+                              title: Text(genre.genre),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/genre',
+                                  arguments: genre,
+                                );
+                              },
                             ),
-                            title: Text(genre.genre),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/genre',
-                                arguments: genre,
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  const SizedBox(height: 100),
-                ],
+                        ],
+                      ),
+                    const SizedBox(height: 120),
+                  ],
+                ),
               ),
             );
           },

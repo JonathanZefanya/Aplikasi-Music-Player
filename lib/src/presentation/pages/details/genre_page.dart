@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/src/core/di/service_locator.dart';
-import 'package:music/src/core/theme/themes.dart';
-import 'package:music/src/presentation/widgets/player_bottom_app_bar.dart';
-import 'package:music/src/presentation/widgets/song_list_tile.dart';
+import 'package:music/src/presentation/pages/library/song_list_page.dart';
 
 class GenrePage extends StatefulWidget {
   final GenreModel genre;
@@ -16,12 +14,11 @@ class GenrePage extends StatefulWidget {
 }
 
 class _GenrePageState extends State<GenrePage> {
-  late List<SongModel> _songs;
+  List<SongModel> _songs = [];
 
   @override
   void initState() {
     super.initState();
-    _songs = [];
     _getSongs();
   }
 
@@ -35,6 +32,10 @@ class _GenrePageState extends State<GenrePage> {
     // remove songs less than 10 seconds long (10,000 milliseconds)
     songs.removeWhere((song) => (song.duration ?? 0) < 10000);
 
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _songs = songs;
     });
@@ -42,37 +43,10 @@ class _GenrePageState extends State<GenrePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // current song, play/pause button, song progress bar, song queue button
-      bottomNavigationBar: const PlayerBottomAppBar(),
-      extendBody: true,
-      appBar: AppBar(
-        backgroundColor: Themes.getTheme().primaryColor,
-        title: Text(
-          widget.genre.genre,
-        ),
-      ),
-      body: Ink(
-        decoration: Themes.getBackgroundDecoration(),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 100),
-                itemCount: _songs.length,
-                itemBuilder: (context, index) {
-                  final SongModel song = _songs[index];
-
-                  return SongListTile(
-                    song: song,
-                    songs: _songs,
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+    return SongListPage(
+      title: widget.genre.genre,
+      songs: _songs,
+      emptyMessage: 'No songs in this genre',
     );
   }
 }

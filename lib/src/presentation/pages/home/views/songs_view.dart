@@ -17,6 +17,7 @@ import 'package:music/src/data/services/hive_box.dart';
 import 'package:music/src/presentation/widgets/add_to_playlist_sheet.dart';
 import 'package:music/src/presentation/widgets/alphabet_index_bar.dart';
 import 'package:music/src/presentation/widgets/song_list_tile.dart';
+import 'package:music/src/core/theme/app_dimens.dart';
 
 class SongsView extends StatefulWidget {
   const SongsView({super.key});
@@ -123,7 +124,8 @@ class _SongsViewState extends State<SongsView>
                         slivers: [
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: _selectionMode
                                   ? _buildSelectionBar()
                                   : Row(
@@ -155,7 +157,8 @@ class _SongsViewState extends State<SongsView>
                           ),
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Row(
                                 children: [
                                   Expanded(
@@ -171,7 +174,8 @@ class _SongsViewState extends State<SongsView>
                                       child: InkWell(
                                         borderRadius: BorderRadius.circular(32),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             const Icon(Icons.shuffle),
                                             const SizedBox(width: 8),
@@ -186,19 +190,21 @@ class _SongsViewState extends State<SongsView>
                                         onTap: () {
                                           // enable shuffle
                                           context.read<PlayerBloc>().add(
-                                                PlayerSetShuffleModeEnabled(true),
+                                                PlayerSetShuffleModeEnabled(
+                                                    true),
                                               );
 
                                           // get random song
-                                          final randomSong =
-                                              songs[Random().nextInt(songs.length)];
+                                          final randomSong = songs[
+                                              Random().nextInt(songs.length)];
 
                                           // play random song
                                           context.read<PlayerBloc>().add(
                                                 PlayerLoadSongs(
                                                   songs,
                                                   sl<MusicPlayer>()
-                                                      .getMediaItemFromSong(randomSong),
+                                                      .getMediaItemFromSong(
+                                                          randomSong),
                                                 ),
                                               );
                                         },
@@ -219,7 +225,8 @@ class _SongsViewState extends State<SongsView>
                                       child: InkWell(
                                         borderRadius: BorderRadius.circular(32),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             const Icon(Icons.play_arrow),
                                             const SizedBox(width: 8),
@@ -234,7 +241,8 @@ class _SongsViewState extends State<SongsView>
                                         onTap: () {
                                           // disable shuffle
                                           context.read<PlayerBloc>().add(
-                                                PlayerSetShuffleModeEnabled(false),
+                                                PlayerSetShuffleModeEnabled(
+                                                    false),
                                               );
 
                                           // play first song
@@ -242,7 +250,8 @@ class _SongsViewState extends State<SongsView>
                                                 PlayerLoadSongs(
                                                   songs,
                                                   sl<MusicPlayer>()
-                                                      .getMediaItemFromSong(songs[0]),
+                                                      .getMediaItemFromSong(
+                                                          songs[0]),
                                                 ),
                                               );
                                         },
@@ -284,7 +293,7 @@ class _SongsViewState extends State<SongsView>
                           ),
                           // bottom padding
                           const SliverToBoxAdapter(
-                            child: SizedBox(height: 140),
+                            child: SizedBox(height: AppSpacing.bottomInset),
                           ),
                         ],
                       ),
