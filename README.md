@@ -14,11 +14,11 @@ See the complete feature list in [FEATURE.md](FEATURE.md).
 
 | Home | Player | Playlist | Settings |
 |------|---------|----------|----------|
-| <img src="assets/docs/gambar/home.png" width="200"> | <img src="assets/docs/gambar/player.png" width="200"> | <img src="assets/docs/gambar/playlist.png" width="200"> | <img src="assets/docs/gambar/settings.png" width="200"> |
+| <img src="assets/docs/home.png" width="200"> | <img src="assets/docs/player.png" width="200"> | <img src="assets/docs/playlist.png" width="200"> | <img src="assets/docs/settings.png" width="200"> |
 
 | Albums | Artists | Genres | Metadata |
 |---------|----------|--------|----------|
-| <img src="assets/docs/gambar/album.png" width="200"> | <img src="assets/docs/gambar/artist.png" width="200"> | <img src="assets/docs/gambar/genres.png" width="200"> | <img src="assets/docs/gambar/metadata.png" width="200"> |
+| <img src="assets/docs/album.png" width="200"> | <img src="assets/docs/artist.png" width="200"> | <img src="assets/docs/genres.png" width="200"> | <img src="assets/docs/metadata.png" width="200"> |
 
 ---
 
