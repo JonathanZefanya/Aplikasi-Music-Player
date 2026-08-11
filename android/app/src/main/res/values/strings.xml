@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_play_pause">Play / Pause</string>
+    <string name="widget_name">Music Player</string>
+    <string name="widget_nothing_playing">Nothing playing</string>
+    <string name="widget_previous">Previous</string>
+    <string name="widget_play_pause">Play or pause</string>
+    <string name="widget_next">Next</string>
+</resources>

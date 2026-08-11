@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:music/src/bloc/playlists/playlists_cubit.dart';
+import 'package:music/src/core/di/service_locator.dart';
+import 'package:music/src/data/repositories/m3u_repository.dart';
 import 'package:music/src/core/extensions/string_extensions.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -26,6 +31,62 @@ class _PlaylistsViewState extends State<PlaylistsView>
   void initState() {
     super.initState();
     context.read<PlaylistsCubit>().queryPlaylists();
+  }
+
+  Future<void> _importM3u() async {
+    final FilePickerResult? picked = await FilePicker.pickFiles(
+      dialogTitle: 'Pick an M3U playlist',
+    );
+
+    final String? path = picked?.files.single.path;
+
+    if (path == null || !mounted) {
+      return;
+    }
+
+    if (!path.toLowerCase().endsWith('.m3u') &&
+        !path.toLowerCase().endsWith('.m3u8')) {
+      Fluttertoast.showToast(msg: 'Please pick an .m3u file');
+      return;
+    }
+
+    final PlaylistsCubit cubit = context.read<PlaylistsCubit>();
+
+    try {
+      final M3uImportResult result =
+          await sl<M3uRepository>().parse(File(path));
+
+      if (result.matched.isEmpty) {
+        Fluttertoast.showToast(msg: 'No song in this playlist was found');
+        return;
+      }
+
+      await cubit.createPlaylist(result.name);
+
+      final Iterable<PlaylistModel> matches = cubit.playlists.where(
+        (playlist) => playlist.playlist == result.name,
+      );
+
+      if (matches.isEmpty) {
+        Fluttertoast.showToast(msg: 'Failed to create playlist');
+        return;
+      }
+
+      final int added = await cubit.addSongsToPlaylist(
+        matches.last.id,
+        result.matched,
+      );
+
+      await cubit.queryPlaylists();
+
+      Fluttertoast.showToast(
+        msg: result.missing == 0
+            ? '$added songs imported'
+            : '$added imported, ${result.missing} not found',
+      );
+    } catch (error) {
+      Fluttertoast.showToast(msg: 'Import failed: $error');
+    }
   }
 
   @override
@@ -82,6 +143,13 @@ class _PlaylistsViewState extends State<PlaylistsView>
             },
             leading: const Icon(Icons.add),
             title: const Text('Add playlist'),
+          ),
+
+          // import m3u
+          ListTile(
+            onTap: _importM3u,
+            leading: const Icon(Icons.playlist_add_check_outlined),
+            title: const Text('Import M3U'),
           ),
 
           // show playlists

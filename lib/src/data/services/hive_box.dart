@@ -40,4 +40,16 @@ class HiveBox {
   static const String playHistoryKey = 'playHistory';
 
   static const String dynamicColorSeedKey = 'dynamicColorSeed';
+
+  static const String equalizerEnabledKey = 'equalizerEnabled';
+  static const String equalizerBandsKey = 'equalizerBands';
+  static const String loudnessEnabledKey = 'loudnessEnabled';
+  static const String loudnessTargetGainKey = 'loudnessTargetGain';
+
+  static const String bassBoostEnabledKey = 'bassBoostEnabled';
+  static const String bassBoostStrengthKey = 'bassBoostStrength';
+  static const String virtualizerEnabledKey = 'virtualizerEnabled';
+  static const String virtualizerStrengthKey = 'virtualizerStrength';
+  static const String reverbEnabledKey = 'reverbEnabled';
+  static const String reverbPresetKey = 'reverbPreset';
 }

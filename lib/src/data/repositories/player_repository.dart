@@ -9,7 +9,9 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music/src/core/theme/themes.dart';
 import 'package:music/src/data/repositories/song_repository.dart';
 import 'package:music/src/data/repositories/stats_repository.dart';
+import 'package:music/src/data/services/audio_effects_service.dart';
 import 'package:music/src/data/services/hive_box.dart';
+import 'package:music/src/data/services/widget_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 extension SequenceStateExtension on SequenceState? {
@@ -76,10 +78,24 @@ abstract class MusicPlayer {
   Duration? get sleepTimerRemaining;
   double get speed;
   double get pitch;
+  AndroidEqualizer get equalizer;
+  AndroidLoudnessEnhancer get loudnessEnhancer;
+  Future<void> setEqualizerEnabled(bool enabled);
+  Future<void> setEqualizerBandGain(int index, double gain);
+  Future<void> setLoudnessEnabled(bool enabled);
+  Future<void> setLoudnessTargetGain(double targetGain);
 }
 
 class JustAudioPlayer implements MusicPlayer {
-  final AudioPlayer _player = AudioPlayer();
+  final AndroidEqualizer _equalizer = AndroidEqualizer();
+  final AndroidLoudnessEnhancer _loudnessEnhancer = AndroidLoudnessEnhancer();
+
+  late final AudioPlayer _player = AudioPlayer(
+    audioPipeline: AudioPipeline(
+      androidAudioEffects: [_equalizer, _loudnessEnhancer],
+    ),
+  );
+
   List<SongModel> currentPlaylist = [];
   ConcatenatingAudioSource _queue = ConcatenatingAudioSource(children: []);
 
@@ -97,6 +113,8 @@ class JustAudioPlayer implements MusicPlayer {
   Duration _lastSavedPosition = Duration.zero;
 
   final StatsRepository _stats = StatsRepository();
+  final AudioEffectsService _audioEffects = AudioEffectsService();
+  final WidgetService _widget = WidgetService();
   String? _statsSongId;
   DateTime? _statsSince;
 
@@ -143,6 +161,8 @@ class JustAudioPlayer implements MusicPlayer {
       } else {
         _flushListeningTime();
       }
+
+      _pushWidgetState();
     });
 
     await _player.setSpeed(speed);
@@ -151,7 +171,14 @@ class JustAudioPlayer implements MusicPlayer {
       await _player.setPitch(pitch);
     }
 
+    _player.androidAudioSessionIdStream.listen((sessionId) {
+      if (sessionId != null) {
+        _audioEffects.attach(sessionId);
+      }
+    });
+
     await _listenToAudioDevices();
+    await _restoreAudioEffects();
 
     // set loop mode
     if (box.get(HiveBox.loopModeKey) != null) {
@@ -288,6 +315,93 @@ class JustAudioPlayer implements MusicPlayer {
     _notifyQueue();
   }
 
+  @override
+  AndroidEqualizer get equalizer => _equalizer;
+
+  @override
+  AndroidLoudnessEnhancer get loudnessEnhancer => _loudnessEnhancer;
+
+  @override
+  Future<void> setEqualizerEnabled(bool enabled) async {
+    await box.put(HiveBox.equalizerEnabledKey, enabled);
+    await _equalizer.setEnabled(enabled);
+  }
+
+  @override
+  Future<void> setEqualizerBandGain(int index, double gain) async {
+    final Map<dynamic, dynamic> bands = Map<dynamic, dynamic>.from(
+      box.get(HiveBox.equalizerBandsKey, defaultValue: {}) as Map,
+    );
+
+    bands[index.toString()] = gain;
+    await box.put(HiveBox.equalizerBandsKey, bands);
+
+    final AndroidEqualizerParameters parameters =
+        await _equalizer.parameters;
+
+    if (index >= 0 && index < parameters.bands.length) {
+      await parameters.bands[index].setGain(gain);
+    }
+  }
+
+  @override
+  Future<void> setLoudnessEnabled(bool enabled) async {
+    await box.put(HiveBox.loudnessEnabledKey, enabled);
+    await _loudnessEnhancer.setEnabled(enabled);
+  }
+
+  @override
+  Future<void> setLoudnessTargetGain(double targetGain) async {
+    await box.put(HiveBox.loudnessTargetGainKey, targetGain);
+    await _loudnessEnhancer.setTargetGain(targetGain);
+  }
+
+  Future<void> _restoreAudioEffects() async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+
+    final bool loudnessEnabled =
+        box.get(HiveBox.loudnessEnabledKey, defaultValue: false) as bool;
+    final double targetGain =
+        (box.get(HiveBox.loudnessTargetGainKey, defaultValue: 0.0) as num)
+            .toDouble();
+
+    await _loudnessEnhancer.setTargetGain(targetGain);
+    await _loudnessEnhancer.setEnabled(loudnessEnabled);
+
+    final bool equalizerEnabled =
+        box.get(HiveBox.equalizerEnabledKey, defaultValue: false) as bool;
+
+    await _equalizer.setEnabled(equalizerEnabled);
+  }
+
+  Future<void> restoreEqualizerBands() async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+
+    final Map<dynamic, dynamic> bands = Map<dynamic, dynamic>.from(
+      box.get(HiveBox.equalizerBandsKey, defaultValue: {}) as Map,
+    );
+
+    if (bands.isEmpty) {
+      return;
+    }
+
+    final AndroidEqualizerParameters parameters = await _equalizer.parameters;
+
+    for (final MapEntry<dynamic, dynamic> entry in bands.entries) {
+      final int? index = int.tryParse(entry.key.toString());
+
+      if (index == null || index < 0 || index >= parameters.bands.length) {
+        continue;
+      }
+
+      await parameters.bands[index].setGain((entry.value as num).toDouble());
+    }
+  }
+
   Future<void> _listenToAudioDevices() async {
     final AudioSession session = await AudioSession.instance;
 
@@ -326,8 +440,19 @@ class JustAudioPlayer implements MusicPlayer {
     });
   }
 
+  void _pushWidgetState() {
+    final MediaItem? mediaItem = _player.sequenceState.currentMediaItem;
+
+    _widget.update(
+      title: mediaItem?.title,
+      artist: mediaItem?.artist,
+      playing: _player.playing,
+    );
+  }
+
   Future<void> _trackSongChange(int? index) async {
     await _flushListeningTime();
+    _pushWidgetState();
 
     if (index == null ||
         currentPlaylist.isEmpty ||
@@ -477,6 +602,9 @@ class JustAudioPlayer implements MusicPlayer {
 
     // set initial index
     await _player.setAudioSource(initialIndex: initialIndex, _queue);
+
+    // gain band equalizer baru bisa dipulihkan setelah audio source aktif
+    await restoreEqualizerBands();
 
     // set current playlist
     currentPlaylist = List<SongModel>.of(playlist);

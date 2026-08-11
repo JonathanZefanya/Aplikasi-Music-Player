@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:audiotags/audiotags.dart';
 
@@ -45,6 +46,141 @@ class MetadataRepository {
         pictures: current?.pictures ?? [],
       ),
     );
+  }
+
+  Future<void> writeArtwork(String path, Uint8List bytes) async {
+    final Tag? current = await read(path);
+
+    await AudioTags.write(
+      path,
+      Tag(
+        title: current?.title,
+        trackArtist: current?.trackArtist,
+        album: current?.album,
+        albumArtist: current?.albumArtist,
+        genre: current?.genre,
+        year: current?.year,
+        trackNumber: current?.trackNumber,
+        trackTotal: current?.trackTotal,
+        discNumber: current?.discNumber,
+        discTotal: current?.discTotal,
+        lyrics: current?.lyrics,
+        pictures: [
+          Picture(
+            pictureType: PictureType.coverFront,
+            mimeType: _mimeTypeOf(bytes),
+            bytes: bytes,
+          ),
+        ],
+      ),
+    );
+  }
+
+  MimeType _mimeTypeOf(Uint8List bytes) {
+    if (bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return MimeType.png;
+    }
+
+    return MimeType.jpeg;
+  }
+
+  Future<Uint8List?> downloadArtwork({
+    required String title,
+    required String artist,
+    String? album,
+  }) async {
+    final String term = [artist, title].where((part) => part.isNotEmpty).join(' ');
+
+    if (term.trim().isEmpty) {
+      return null;
+    }
+
+    final Uri searchUri = Uri.https('itunes.apple.com', '/search', {
+      'term': term,
+      'entity': 'song',
+      'limit': '1',
+    });
+
+    final String? body = await _get(searchUri);
+
+    if (body == null) {
+      return null;
+    }
+
+    try {
+      final Map<String, dynamic> decoded =
+          jsonDecode(body) as Map<String, dynamic>;
+      final List<dynamic> results = decoded['results'] as List<dynamic>;
+
+      if (results.isEmpty) {
+        return null;
+      }
+
+      final String? artworkUrl =
+          (results.first as Map<String, dynamic>)['artworkUrl100'] as String?;
+
+      if (artworkUrl == null) {
+        return null;
+      }
+
+      return _download(
+        Uri.parse(artworkUrl.replaceAll('100x100bb', '600x600bb')),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _get(Uri uri) async {
+    final HttpClient client = HttpClient();
+
+    try {
+      final HttpClientRequest request = await client.getUrl(uri);
+      request.headers.set(HttpHeaders.userAgentHeader, _userAgent);
+
+      final HttpClientResponse response = await request.close();
+
+      if (response.statusCode != 200) {
+        return null;
+      }
+
+      return await response.transform(utf8.decoder).join();
+    } catch (_) {
+      return null;
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Future<Uint8List?> _download(Uri uri) async {
+    final HttpClient client = HttpClient();
+
+    try {
+      final HttpClientRequest request = await client.getUrl(uri);
+      request.headers.set(HttpHeaders.userAgentHeader, _userAgent);
+
+      final HttpClientResponse response = await request.close();
+
+      if (response.statusCode != 200) {
+        return null;
+      }
+
+      final List<int> bytes = [];
+
+      await for (final List<int> chunk in response) {
+        bytes.addAll(chunk);
+      }
+
+      return Uint8List.fromList(bytes);
+    } catch (_) {
+      return null;
+    } finally {
+      client.close(force: true);
+    }
   }
 
   Future<String?> embeddedLyrics(String path) async {

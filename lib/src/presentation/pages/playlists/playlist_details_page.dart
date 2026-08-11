@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:music/src/bloc/player/player_bloc.dart';
+import 'package:music/src/data/repositories/m3u_repository.dart';
 import 'package:music/src/bloc/playlists/playlists_cubit.dart';
 import 'package:music/src/bloc/home/home_bloc.dart';
 import 'package:music/src/core/di/service_locator.dart';
@@ -36,6 +41,13 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
       appBar: AppBar(
         title: Text(widget.playlist.playlist),
         backgroundColor: Themes.getTheme().primaryColor,
+        actions: [
+          IconButton(
+            onPressed: _songs.isEmpty ? null : _exportM3u,
+            icon: const Icon(Icons.ios_share_outlined),
+            tooltip: 'Export M3U',
+          ),
+        ],
       ),
       body: Ink(
         decoration: Themes.getBackgroundDecoration(),
@@ -93,6 +105,20 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _exportM3u() async {
+    try {
+      final File file = await sl<M3uRepository>().export(
+        widget.playlist.playlist,
+        _songs,
+      );
+
+      Fluttertoast.showToast(msg: 'Exported ${file.uri.pathSegments.last}');
+      await Share.shareXFiles([XFile(file.path)]);
+    } catch (error) {
+      Fluttertoast.showToast(msg: 'Export failed: $error');
+    }
   }
 
   Widget _buildTile({

@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:audiotags/audiotags.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -34,6 +38,10 @@ class _EditMetadataPageState extends State<EditMetadataPage> {
   bool _loading = true;
   bool _saving = false;
   bool _fetching = false;
+  bool _fetchingArtwork = false;
+
+  Uint8List? _artwork;
+  bool _artworkChanged = false;
 
   @override
   void initState() {
@@ -70,6 +78,9 @@ class _EditMetadataPageState extends State<EditMetadataPage> {
       _year.text = tag?.year?.toString() ?? '';
       _trackNumber.text = tag?.trackNumber?.toString() ?? '';
       _lyrics.text = tag?.lyrics ?? '';
+      _artwork = tag?.pictures.isNotEmpty == true
+          ? tag!.pictures.first.bytes
+          : null;
       _loading = false;
     });
   }
@@ -97,6 +108,8 @@ class _EditMetadataPageState extends State<EditMetadataPage> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  _buildArtwork(),
+                  const SizedBox(height: 16),
                   _field(_title, 'Title'),
                   _field(_artist, 'Artist'),
                   _field(_album, 'Album'),
@@ -133,6 +146,89 @@ class _EditMetadataPageState extends State<EditMetadataPage> {
                 ],
               ),
       ),
+    );
+  }
+
+  Widget _buildArtwork() {
+    return Column(
+      children: [
+        Container(
+          width: 180,
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey.withOpacity(0.15),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _artwork == null
+              ? const Icon(Icons.album_outlined, size: 64)
+              : Image.memory(_artwork!, fit: BoxFit.cover),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              onPressed: _pickArtwork,
+              icon: const Icon(Icons.image_outlined),
+              label: const Text('Pick'),
+            ),
+            TextButton.icon(
+              onPressed: _fetchingArtwork ? null : _downloadArtwork,
+              icon: const Icon(Icons.cloud_download_outlined),
+              label: Text(_fetchingArtwork ? 'Downloading...' : 'Download'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickArtwork() async {
+    final XFile? picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (picked == null) {
+      return;
+    }
+
+    final Uint8List bytes = await File(picked.path).readAsBytes();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _artwork = bytes;
+      _artworkChanged = true;
+    });
+  }
+
+  Future<void> _downloadArtwork() async {
+    setState(() => _fetchingArtwork = true);
+
+    final Uint8List? bytes = await _repository.downloadArtwork(
+      title: _title.text.trim(),
+      artist: _artist.text.trim(),
+      album: _album.text.trim(),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _fetchingArtwork = false;
+
+      if (bytes != null) {
+        _artwork = bytes;
+        _artworkChanged = true;
+      }
+    });
+
+    Fluttertoast.showToast(
+      msg: bytes == null ? 'Artwork not found' : 'Artwork downloaded',
     );
   }
 
@@ -210,6 +306,10 @@ class _EditMetadataPageState extends State<EditMetadataPage> {
         trackNumber: int.tryParse(_trackNumber.text.trim()),
         lyrics: _lyrics.text,
       );
+
+      if (_artworkChanged && _artwork != null) {
+        await _repository.writeArtwork(widget.song.data, _artwork!);
+      }
 
       Fluttertoast.showToast(
         msg: 'Saved. Refresh the library to see the change',

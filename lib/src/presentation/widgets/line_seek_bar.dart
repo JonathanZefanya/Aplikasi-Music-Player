@@ -4,35 +4,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/src/bloc/player/player_bloc.dart';
 import 'package:music/src/data/repositories/player_repository.dart';
 
-class WaveformSeekBar extends StatefulWidget {
+class LineSeekBar extends StatefulWidget {
   final MusicPlayer player;
-  final String seed;
   final Color? activeColor;
 
-  const WaveformSeekBar({
+  const LineSeekBar({
     super.key,
     required this.player,
-    required this.seed,
     this.activeColor,
   });
 
   @override
-  State<WaveformSeekBar> createState() => _WaveformSeekBarState();
+  State<LineSeekBar> createState() => _LineSeekBarState();
 }
 
-class _WaveformSeekBarState extends State<WaveformSeekBar> {
-  static const int _barCount = 64;
-
+class _LineSeekBarState extends State<LineSeekBar> {
   double? _dragProgress;
-
-  List<double> get _amplitudes {
-    int state = widget.seed.hashCode & 0x7fffffff;
-
-    return List<double>.generate(_barCount, (index) {
-      state = (state * 1103515245 + 12345) & 0x7fffffff;
-      return 0.18 + (state % 1000) / 1000 * 0.82;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +31,14 @@ class _WaveformSeekBarState extends State<WaveformSeekBar> {
         return StreamBuilder<Duration?>(
           stream: widget.player.duration,
           builder: (context, durationSnapshot) {
-            final Duration duration =
-                durationSnapshot.data ?? Duration.zero;
+            final Duration duration = durationSnapshot.data ?? Duration.zero;
 
             final double progress = duration.inMilliseconds == 0
                 ? 0
                 : (position.inMilliseconds / duration.inMilliseconds)
                     .clamp(0.0, 1.0);
+
+            final double shown = _dragProgress ?? progress;
 
             return Column(
               children: [
@@ -78,14 +66,12 @@ class _WaveformSeekBarState extends State<WaveformSeekBar> {
                         });
                       },
                       child: SizedBox(
-                        height: 48,
+                        height: 32,
                         width: double.infinity,
                         child: CustomPaint(
-                          painter: _WaveformPainter(
-                            amplitudes: _amplitudes,
-                            progress: _dragProgress ?? progress,
-                            activeColor: widget.activeColor ??
-                                Theme.of(context).colorScheme.primary,
+                          painter: _LinePainter(
+                            progress: shown,
+                            activeColor: widget.activeColor ?? Colors.white,
                             inactiveColor: Colors.white.withOpacity(0.28),
                           ),
                         ),
@@ -93,12 +79,13 @@ class _WaveformSeekBarState extends State<WaveformSeekBar> {
                     );
                   },
                 ),
-                const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _format(position),
+                      _format(_dragProgress == null
+                          ? position
+                          : duration * _dragProgress!),
                       style: const TextStyle(color: Colors.white),
                     ),
                     Text(
@@ -135,14 +122,15 @@ class _WaveformSeekBarState extends State<WaveformSeekBar> {
   }
 }
 
-class _WaveformPainter extends CustomPainter {
-  final List<double> amplitudes;
+class _LinePainter extends CustomPainter {
   final double progress;
   final Color activeColor;
   final Color inactiveColor;
 
-  _WaveformPainter({
-    required this.amplitudes,
+  static const double _trackHeight = 4;
+  static const double _thumbRadius = 7;
+
+  _LinePainter({
     required this.progress,
     required this.activeColor,
     required this.inactiveColor,
@@ -150,36 +138,45 @@ class _WaveformPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (amplitudes.isEmpty) {
-      return;
-    }
-
-    final double slot = size.width / amplitudes.length;
-    final double barWidth = slot * 0.55;
     final double centerY = size.height / 2;
-    final int playedBars = (amplitudes.length * progress).round();
+    final double usableWidth = size.width - _thumbRadius * 2;
+    final double thumbX = _thumbRadius + usableWidth * progress;
 
-    for (int index = 0; index < amplitudes.length; index++) {
-      final double barHeight = size.height * amplitudes[index];
-      final Paint paint = Paint()
-        ..color = index < playedBars ? activeColor : inactiveColor
+    final Paint track = Paint()
+      ..color = inactiveColor
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = _trackHeight;
+
+    canvas.drawLine(
+      Offset(_thumbRadius, centerY),
+      Offset(size.width - _thumbRadius, centerY),
+      track,
+    );
+
+    if (progress > 0) {
+      final Paint played = Paint()
+        ..color = activeColor
         ..strokeCap = StrokeCap.round
-        ..strokeWidth = barWidth;
-
-      final double x = slot * index + slot / 2;
+        ..strokeWidth = _trackHeight;
 
       canvas.drawLine(
-        Offset(x, centerY - barHeight / 2),
-        Offset(x, centerY + barHeight / 2),
-        paint,
+        Offset(_thumbRadius, centerY),
+        Offset(thumbX, centerY),
+        played,
       );
     }
+
+    canvas.drawCircle(
+      Offset(thumbX, centerY),
+      _thumbRadius,
+      Paint()..color = activeColor,
+    );
   }
 
   @override
-  bool shouldRepaint(_WaveformPainter oldDelegate) {
+  bool shouldRepaint(_LinePainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.activeColor != activeColor ||
-        oldDelegate.amplitudes != amplitudes;
+        oldDelegate.inactiveColor != inactiveColor;
   }
 }

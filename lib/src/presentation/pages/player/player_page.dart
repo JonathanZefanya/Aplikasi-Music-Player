@@ -17,7 +17,7 @@ import 'package:music/src/data/services/artwork_palette.dart';
 import 'package:music/src/presentation/widgets/animated_favorite_button.dart';
 import 'package:music/src/presentation/widgets/glass_container.dart';
 import 'package:music/src/presentation/widgets/lyrics_sheet.dart';
-import 'package:music/src/presentation/widgets/waveform_seek_bar.dart';
+import 'package:music/src/presentation/widgets/line_seek_bar.dart';
 
 class PlayerPage extends StatefulWidget {
   const PlayerPage({
@@ -274,10 +274,7 @@ class _PlayerPageState extends State<PlayerPage> {
                               ),
                               const Spacer(),
                               // seek bar
-                              WaveformSeekBar(
-                                player: player,
-                                seed: mediaItem.id,
-                              ),
+                              LineSeekBar(player: player),
                               const Spacer(),
                               // shuffle, previous, play/pause, next, repeat
                               Row(
@@ -408,10 +405,7 @@ class _PlayerPageState extends State<PlayerPage> {
                       ),
                       const SizedBox(height: 64),
                       // seek bar
-                      WaveformSeekBar(
-                        player: player,
-                        seed: mediaItem.id,
-                      ),
+                      LineSeekBar(player: player),
                       const SizedBox(height: 16),
                       // shuffle, previous, play/pause, next, repeat
                       Row(

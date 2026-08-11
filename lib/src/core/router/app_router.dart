@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music/src/presentation/pages/config/backup_page.dart';
+import 'package:music/src/presentation/pages/config/equalizer_page.dart';
 import 'package:music/src/presentation/pages/config/library_page.dart';
 import 'package:music/src/presentation/pages/config/playback_page.dart';
 import 'package:music/src/presentation/pages/library/folders_page.dart';
@@ -40,6 +41,7 @@ class AppRouter {
   static const String playbackRoute = '/playback';
   static const String libraryRoute = '/library';
   static const String backupRoute = '/backup';
+  static const String equalizerRoute = '/equalizer';
   static const String foldersRoute = '/folders';
   static const String smartPlaylistsRoute = '/smartPlaylists';
   static const String statisticsRoute = '/statistics';
@@ -109,6 +111,10 @@ class AppRouter {
       case backupRoute:
         return MaterialPageRoute<dynamic>(
           builder: (_) => const BackupPage(),
+        );
+      case equalizerRoute:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const EqualizerPage(),
         );
       case foldersRoute:
         return MaterialPageRoute<dynamic>(

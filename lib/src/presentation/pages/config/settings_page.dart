@@ -90,6 +90,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     Navigator.of(context).pushNamed(AppRouter.playbackRoute);
                   },
                 ),
+                // equalizer
+                ListTile(
+                  leading: const Icon(Icons.equalizer_outlined),
+                  title: const Text('Equalizer'),
+                  subtitle: const Text(
+                    'Atur frekuensi dan penguat kenyaringan',
+                  ),
+                  onTap: () async {
+                    Navigator.of(context).pushNamed(AppRouter.equalizerRoute);
+                  },
+                ),
                 // backup & restore
                 ListTile(
                   leading: const Icon(Icons.backup_outlined),

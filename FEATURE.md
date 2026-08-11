@@ -2,7 +2,7 @@
 - [x] Playlist (Create, Edit, Delete)
 - [x] Add/Remove Songs from Playlist
 - [x] Reorder Playlist (Drag & Drop)
-- [ ] Import/Export M3U Playlist
+- [x] Import/Export M3U Playlist
 - [x] Now Playing Queue
 - [x] Add to Queue
 - [x] Play Next
@@ -16,11 +16,11 @@
 
 # Audio Features
 - [x] Sleep Timer
-- [ ] Equalizer
-- [ ] Bass Boost
-- [ ] Virtualizer
-- [ ] Loudness Enhancer
-- [ ] Reverb
+- [x] Equalizer
+- [x] Bass Boost
+- [x] Virtualizer
+- [x] Loudness Enhancer
+- [x] Reverb
 - [ ] Crossfade
 - [ ] Gapless Playback
 - [x] Fade In / Fade Out
@@ -41,8 +41,8 @@
 - [x] Embedded Lyrics Support
 - [x] Online Lyrics Support
 - [x] Edit Song Metadata
-- [ ] Edit Album Artwork
-- [ ] Download Album Artwork
+- [x] Edit Album Artwork
+- [x] Download Album Artwork
 - [x] Automatic Artwork Detection
 
 # User Experience
@@ -54,16 +54,15 @@
 - [x] Animated Album Artwork
 - [x] Rotating Album Artwork
 - [x] Color Palette from Album Art
-- [x] Waveform Seekbar
 
 # Android Integration
-- [ ] Home Screen Widget
+- [x] Home Screen Widget
 - [ ] Lock Screen Widget
 - [ ] Android Auto
 - [ ] Wear OS Support
 - [ ] Chromecast
 - [ ] Bluetooth Audio Output Selection
-- [ ] Quick Settings Tile
+- [x] Quick Settings Tile
 - [ ] Voice Search
 
 # Advanced Features

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -41,7 +42,10 @@ class _LibraryPageState extends State<LibraryPage> {
         child: ListView(
           children: [
             SwitchListTile(
-              secondary: const Icon(Icons.chat_outlined),
+              secondary: const FaIcon(
+                FontAwesomeIcons.whatsapp,
+                color: Color(0xFF25D366),
+              ),
               title: const Text('Hide WhatsApp audio'),
               value: _hideWhatsApp,
               onChanged: (value) {
@@ -54,7 +58,10 @@ class _LibraryPageState extends State<LibraryPage> {
               },
             ),
             SwitchListTile(
-              secondary: const Icon(Icons.send_outlined),
+              secondary: const FaIcon(
+                FontAwesomeIcons.telegram,
+                color: Color(0xFF0088CC),
+              ),
               title: const Text('Hide Telegram audio'),
               value: _hideTelegram,
               onChanged: (value) {

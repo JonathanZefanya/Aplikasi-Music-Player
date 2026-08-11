@@ -1,7 +1,7 @@
 name: music
 description: "music is a local music player app that plays music from your device built with Flutter."
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
-version: 1.1.0+1
+version: 1.2.0+1
 
 environment:
   sdk: ">=3.5.3 <4.0.0"
@@ -11,6 +11,7 @@ dependencies:
   audiotags: ^1.4.5
   bloc: ^8.1.4 # state management
   dynamic_color: 1.7.0 # material you / dynamic color
+  file_picker: ^11.0.3
   flutter:
     sdk: flutter # flutter sdk
   flutter_bloc: ^8.1.6 # state management
@@ -33,6 +34,7 @@ dependencies:
   rxdart: ^0.28.0 # stream
   share_plus: ^10.0.2 # share song
   url_launcher: ^6.3.0 # open url
+  font_awesome_flutter: ^10.4.0 # font awesome icons
 
 dev_dependencies:
   flutter_test:
